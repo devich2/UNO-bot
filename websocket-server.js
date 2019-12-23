@@ -1,9 +1,10 @@
-var webSocketsServerPort = 1337;
+var webSocketsServerPort = process.env.PORT;
 const logic = require("./bot/objects");
 const storage = require("./bot/db");
 var webSocketServer = require('websocket').server;
 var http = require('http');
 
+  
 
 var server = http.createServer(function(request, response) {
   });
