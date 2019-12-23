@@ -1,4 +1,4 @@
-var webSocketsServerPort = process.env.PORT;
+var webSocketsServerPort = process.env.PORT;  //process.env.PORT
 const logic = require("./bot/objects");
 const storage = require("./bot/db");
 var webSocketServer = require('websocket').server;
@@ -16,7 +16,7 @@ var server = http.createServer(function(request, response) {
     httpServer: server
   });
   let clients = [];
-  let admin_client = [];
+  let admin_client = null;
   function save_connection(data, conn)
   {
      for(let i in clients)
@@ -37,7 +37,7 @@ var server = http.createServer(function(request, response) {
 
   async function check_in_game(data)
   {
-    //console.log('sdsdv',data.id);
+    console.log('Id', data.id);
     let games = await storage.load_by_id(data.id);
     return games.length != 0;
   }
@@ -63,7 +63,7 @@ var server = http.createServer(function(request, response) {
     let in_game = await check_in_game(data);
     if(in_game)
     {
-      conn.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME'}))
+      conn.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME', player:data}))
     }
     else
     {
@@ -86,10 +86,11 @@ var server = http.createServer(function(request, response) {
         {
           if(players.findIndex(player=> player.id == key)!=-1) 
           {
-          client[key].sendUTF(JSON.stringify(data));
+             client[key].sendUTF(JSON.stringify(data));
           }
         }
       })
+     if(admin_client) admin_client.sendUTF(SON.stringify(data));
      
   }
   async function delete_player(data,conn)
@@ -145,12 +146,16 @@ var server = http.createServer(function(request, response) {
 
   async function put_card(data)
  {
+   if(!data.id_creator)
+   {
+
+   }
   let game = await storage.load_game(data.id_creator);
   game.put_card(data.card);
   storage.save_game(game);
   broadcast(Object.assign({type: "PUT_CARD",id:game.id, possible_cards: game.possible_cards, last_card: game.last_card, now: game.now, players: game.players }), game.players);
  }
-
+ 
 async function find_games(data, conn)
 {
   let games = await storage.find_games(data.username);
@@ -171,10 +176,10 @@ async function find_games(data, conn)
    connection.on('message', function(message) {
       if (message.type == 'utf8') { 
         let data = JSON.parse(message.utf8Data);
-        //console.log(data);
+        //console.log(data); {type:'CRARE', hello: world, oweq: , id_player: , }
         switch(data.type)
         {
-          case 'SAVE_CONNECTION': if(data.admin) admin_client.push(connection); else save_connection(data, connection); break;
+          case 'SAVE_CONNECTION': if(data.admin) admin_client = connection; else save_connection(data, connection); break;
           case 'CREATE_GAME': console.log('nice');create_game(data, connection); break;
           case 'ADD_PLAYER': add_player(data, connection); break;
           case 'DELETE_PLAYER': delete_player(data, connection); break;
