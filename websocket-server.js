@@ -91,7 +91,7 @@ var server = http.createServer(function(request, response) {
           }
         }
       })
-     if(admin_client) admin_client.sendUTF(SON.stringify(data));
+     if(admin_client) admin_client.sendUTF(JSON.stringify(data));//suka
      
   }
   async function delete_player(data,conn)
