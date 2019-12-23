@@ -1,0 +1,7 @@
+{
+    "redis": {
+        "port": 6380,
+        "host": "127.0.0.1"
+    },
+    "token": "744209775:AAGD-ikirLHQ2UP6MCrFI-Z51lPEAgX3rBg"
+}
