@@ -1,0 +1,26 @@
+{
+  "name": "unogame",
+  "version": "1.0.0",
+  "description": "Воплощение карточной игры Uno в виде  MOG(Multiplayer Online Game).",
+  "main": "index.js",
+  "scripts": {
+    "start": "node websocket-server.js",
+    "test": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dalor/UNOgame.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dalor/UNOgame/issues"
+  },
+  "homepage": "https://github.com/dalor/UNOgame#readme",
+  "dependencies": {
+    "create-react-app": "^3.3.0",
+    "redis": "^2.8.0",
+    "telegraf": "^3.34.1",
+    "websocket": "^1.0.31"
+  }
+}
