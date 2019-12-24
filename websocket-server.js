@@ -76,7 +76,7 @@ async function add_player(data, conn) {
     let game = new logic.Game(content);
     game.add_player(data.game.player);
     storage.save_game(game);
-    broadcast(send_game("PLAYER_JOINED", data, game, conn));
+    broadcast(send_game("PLAYER_JOINED", data, game));
   }
 }
 
@@ -127,8 +127,7 @@ async function get_cards(data) {
   } : {}));
 }
 
-const send_game = (type, data, game, conn) => {
-  const new_data = Object.assign(data, {
+const send_game = (type, data, game) => Object.assign(data, {
     type: type,
     game: {
       id: game.id,
@@ -140,7 +139,6 @@ const send_game = (type, data, game, conn) => {
       players: game.players
     }
   })
-}
 
 async function start_game(data, conn) {
   try {
@@ -148,13 +146,13 @@ async function start_game(data, conn) {
     let game = new logic.Game(content);
     game.start();
     storage.save_game(game);
-    broadcast(send_game("STARTED_GAME", data, game, conn));
+    broadcast(send_game("STARTED_GAME", data, game));
   } catch(e){
     const errs = {
         "No game with such an id": "NOT_FOUND_GAME",
         "Not enough players to start": "NOT_ENOUGH_PLAYERS"
     }
-   broadcast(send_game(errs[e.message], data, {id: data.game.id}, conn));
+   broadcast(send_game(errs[e.message], data, {id: data.game.id}));
   }
 }
 
@@ -191,14 +189,14 @@ async function put_card(data) {
     let game = await storage.load_game(data.game.id);
     game.put_card(data.card);
     storage.save_game(game);
-    broadcast(send_game('PUT_CARD', data, game, conn));
+    broadcast(send_game('PUT_CARD', data, game));
   }
   catch(e){
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",
       "Not your step": "NOT_YOU"
   }
-    broadcast(send_game('NOT_FOUND_GAME', data, {id: data.game.id}, conn));
+    broadcast(send_game('NOT_FOUND_GAME', data, {id: data.game.id}));
   }
 }
 
