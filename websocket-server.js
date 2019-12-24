@@ -67,7 +67,6 @@ async function create_game(data, conn) {
 }
 
 async function add_player(data, conn) {
-  console.log('AddedData:', data);
   let in_game = await check_in_game(data);
   if (in_game) {
     conn.sendUTF(JSON.stringify(Object.assign(data, {
@@ -110,7 +109,6 @@ async function delete_player(data, conn) {
 
 async function get_cards(data) {
   let player_id = data.player.id;
-  console.log('IDPLAUER', data);
   let game_content = await storage.load_by_id(player_id);
   let game = null;
   let card_result = {};
@@ -211,7 +209,7 @@ async function put_card(data) {
     if (game.now_player().id != player_id) throw new Error('Not your step');
     game.put_card(find_card(data.card.id));
     storage.save_game(game);
-    console.log(game.repr())
+    console.log(game.stringify())
     broadcast(send_game('PUT_CARD', data, game));
   } catch (e) {
     const errs = {
