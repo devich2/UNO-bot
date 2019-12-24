@@ -143,8 +143,6 @@ class Game {
         this.used_cards.push(new Card(Object.assign({}, this.last_card)));
         console.log('Dropped card: ', this.last_card);
         this.last_card = card; //need check
-        console.log('Last card', this.last_card);
-        console.log('New card:', this.last_card);
     }
     get_start_cards() {
         return this.get_some_cards(7);
@@ -204,7 +202,7 @@ class Game {
             this.winner = 1;
         }
         return res;
-    }         
+    }
     check_over() {
         let res = {};
         if (this.is_over()) {

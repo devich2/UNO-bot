@@ -126,7 +126,13 @@ async function get_cards(data) {
     cards = cards.map((val) => {
       let available = possible.findIndex((v) => v.light == val.id)
       console.log(val.id, find_card(val.id))
-      return available >= 0 ? {id: val.id, valid: true} : {id: find_card(val.id).dark, valid: false};
+      return available >= 0 ? {
+        id: val.id,
+        valid: true
+      } : {
+        id: find_card(val.id).dark,
+        valid: false
+      };
     })
     card_result = cards == [] ? {
       type: 'NO_CARDS'
@@ -181,7 +187,7 @@ async function pass(data) {
   try {
     let game_content = await storage.load_game(data.game.id);
     let game = new logic.Game(game_content);
-    if(game.now_player().id != data.player.id) throw new Error('Not your step"');
+    if (game.now_player().id != data.player.id) throw new Error('Not your step"');
     game.pass();
     storage.save_game(game);
     broadcast(send_game('PASSED', data, game));
@@ -203,7 +209,7 @@ async function put_card(data) {
     const game_content = await storage.load_by_id(player_id);
     game = new logic.Game(game_content[0]);
     if (game.now_player().id != player_id) throw new Error('Not your step');
-    game.put_card(find_card(data.card.id)); 
+    game.put_card(find_card(data.card.id));
     storage.save_game(game);
     broadcast(send_game('PUT_CARD', data, game));
   } catch (e) {
@@ -230,7 +236,7 @@ async function set_color(data) {
     let game = new logic.Game(game_content);
     game.set_color(data.color);
     storage.save_game(game);
-    broadcast(send_game('SET_COLOR', data, game));           
+    broadcast(send_game('SET_COLOR', data, game));
   } catch (e) {
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",
