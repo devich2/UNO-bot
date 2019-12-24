@@ -1,6 +1,12 @@
 let card_deck = require("./uno_cards");
 let abilities = require("./abilities")
 let possibilities = require("./possibilities")
+const cards = require('./uno_cards')
+const find_card = (id) => {
+  for (let card of cards) {
+    if (card.light == id) return new Card(card)
+  }
+}
 class Card {
     constructor(dict) {
         // console.log(dict)
@@ -75,8 +81,8 @@ class Game {
         return {
             id: this.id,
             now: this.now,
-            last_card: this.last_card ,
-            used_cards: this.used_cards ,
+            last_card: this.last_card && this.last_card.repr(),
+            used_cards: this.used_cards.map(card=>card.repr()) ,
             cards: this.cards.map(card => card.repr()) ,
             possible_cards: this.possible_cards.map(card => card.repr()),
             players: this.players.map(player => player.repr()),
@@ -165,7 +171,7 @@ class Game {
             random_int = this.getRandomInt(0, this.cards.length - 1);
             this.last_card = this.cards[random_int];
         }
-        while (this.last_card.is_special());
+        while (find_card(this.last_card.id).is_special());
         this.cards.splice(random_int, 1);
         console.log(this.cards);
         console.log('Last card', this.last_card);
@@ -174,9 +180,11 @@ class Game {
     add_possible() {
         console.log('Added possible');
         this.possible_cards = [];
-        let content = this.last_card.is_special() ? this.last_card.content : 'simple';
-        let poss_cards = possibilities[content](this.last_card);
-        let cards = this.now_player().cards;
+        let last_card = find_card(this.last_card.id);
+        let content = last_card.is_special() ? last_card.content : 'simple';
+
+        let poss_cards = possibilities[content](last_card);
+        let cards = this.now_player().cards.map(card=>find_card(card.id));
         outer: for (let card of cards) {
             inner: for (let poss in poss_cards) {
                 let pos = true;
@@ -190,7 +198,7 @@ class Game {
     }
 
     check_possible(poss_card) {
-        return this.possible_cards.findIndex(card => card.content == poss_card.content && card.type == poss_card.type) == -1 ? false : true;
+        return this.possible_cards.map(card=>find_card(card.id)).findIndex(card => card.content == poss_card.content && card.type == poss_card.type) == -1 ? false : true;
     }
 
     check_winner() {
@@ -210,12 +218,12 @@ class Game {
         }
         return res;
     }
-    put_card(dict) {
-        let card = new Card(dict);
+    put_card(id) {
+        let card = find_card(id);
         console.log('Put card:', card);
         let content = card.is_special() ? card.content : 'simple';
         if (this.check_possible(card)) { //!
-            console.log('player', his.now_player().cards)
+            console.log('player', this.now_player().cards)
             this.drop(this.now_player().remove_card(card));
             console.log('player1', this.now_player().cards)
             this.ability = abilities[content](this);

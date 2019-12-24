@@ -102,6 +102,7 @@ async function delete_player(data, conn) {
 
 async function get_cards(data) {
   let player_id = data.player.id;
+  console.log('Player_d', player_id);
   let game_content = await storage.load_by_id(player_id);
   let game = null;
   let card_result = {};
@@ -110,10 +111,11 @@ async function get_cards(data) {
       type: 'NO_CARDS'
     };
   else {
-    game = new logic.Game(game_content[0]);
-    // console.log(game.last_card);
+    console.log(game_content);;
+    game = new logic.Game(game_content[0] || {});
     const index = game.players.findIndex(player => player.id == player_id);
     const now_player = game.now_player()
+    console.log('Now player id', now_player.id)
     let cards = game.players[index].cards;
     const possible = game.possible_cards;
     if (player_id == now_player.id) {
@@ -156,7 +158,7 @@ const send_game = (type, data, game) => Object.assign(data, {
       possible_cards: game.possible_cards
     },
     last_card: {
-      id: game.last_card.repr().id
+      id: game.last_card.id || game.last_card.light
     },
     players: game.players
   }
@@ -218,7 +220,7 @@ async function put_card(data) {
     const game_content = await storage.load_by_id(player_id);
     game = new logic.Game(game_content[0]);
     if (game.now_player().id != player_id) throw new Error('Not your step');
-    game.put_card(find_card(data.card.id));
+    game.put_card(data.card.id);
     storage.save_game(game);
     // console.log(game.stringify())
     broadcast(send_game('PUT_CARD', data, game));
