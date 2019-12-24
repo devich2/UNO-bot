@@ -125,7 +125,7 @@ async function get_cards(data) {
     const possible = game.possible_cards;
     cards = cards.map((val) => {
       let available = possible.findIndex((v) => v.light == val.id)
-      return available >= 0 ? {id: val.id, valid: true} : {id: get_cards(val.id).dark, valid: false};
+      return available >= 0 ? {id: val.id, valid: true} : {id: find_card(val.id).dark, valid: false};
     })
     card_result = cards == [] ? {
       type: 'NO_CARDS'
