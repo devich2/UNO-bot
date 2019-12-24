@@ -2,7 +2,7 @@ const client = require('./redis')
 
 const save_game = (game) => {
     console.log('Saved');
-    console.log('Game', game)
+    //console.log('Game', game)
     client.HMSET(game.id, game.repr(), function (err, res) {})
 
 }
@@ -39,7 +39,7 @@ const load_game = (game_id) => new Promise((resolve, reject) => {
 })
 
 const parse = (game) => {
-    console.log('NEWASD',game)
+    console.log('NEWASD',JSON.parse(game.players))
     game.now = parseInt(game.now);
     game.last_card = JSON.parse(game.last_card);
     game.players = JSON.parse(game.players);
