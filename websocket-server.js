@@ -32,8 +32,8 @@ function save_connection(data, conn) {
 }
 
 async function check_in_game(data) {
-  console.log('Id', data.id);
-  let games = await storage.load_by_id(data.id);
+  console.log('Id', data.game.id);
+  let games = await storage.load_by_id(data.game.player.id);
   return games.length != 0;
 }
 
@@ -50,8 +50,8 @@ async function create_game(data, conn) {
     }))
   } else {
     let game = new logic.Game({
-      id: data.id,
-      players: [data]
+      id: data.game.id,
+      players: [data.game.player]    
     });
     // console.log(game);
     console.log('CreatedGame:', game);
@@ -72,25 +72,15 @@ async function create_game(data, conn) {
 
 async function add_player(data, conn) {
   console.log('AddedData:', data);
-  let in_game = await check_in_game(data);
+  let in_game = await check_in_game(data); 
   if (in_game) {
-    conn.sendUTF(JSON.stringify({
-      type: 'ALREADY_IN_GAME',
-      player: data
-    }))
-    if (admin_client != conn) admin_client.sendUTF(JSON.stringify({
-      type: 'ALREADY_IN_GAME',
-      player: data
-    }))
-  } else {
-    console.log('Here');
-    console.log(data.id_creator)
-    let content = await storage.load_game(data.id);
-    let game = new logic.Game(content);
+    conn.sendUTF(JSON.stringify(Object.assign(data,{type: 'ALREADY_IN_GAME'})));
+    if (admin_client != conn) admin_client.sendUTF(Object.assign( data, {type: 'ALREADY_IN_GAME'}))
 
-    game.add_player(data);
-    //console.log(game);
-    console.log('AddedData:', game);
+  } else {
+    let content = await storage.load_game(data.game.id);
+    let game = new logic.Game(content);
+    game.add_player(data.game.player);
     storage.save_game(game);
     broadcast({
       type: "PLAYER_JOINED",
@@ -112,21 +102,26 @@ function broadcast(data, players) {
 
 }
 async function delete_player(data, conn) {
-  let content =  await storage.load_game(data.chat_id);
+  let content =  await storage.load_game(data.game.id);
   let game = new logic.Game(content);
-  game.remove_player(data);
-  if (game.players.length == 0 || game.players.length == 1) {
-    storage.delete_game(data.chat_id);
-  }
-    else {
-    storage.save_game(game);
-    broadcast({
-      type: "PLAYER_LEFT",
-      left: data.full_name,
-      players: game.players
-    }, game.players);
-  }
+  let deleted_player = game.remove_player(data.game.player);
+  storage.delete_game(data.game.id);
+  broadcast(Object.assign(data, { type: "PLAYER_LEFT", left: deleted_player}), game.players);                                                                       
+}
 
+async function get_cards(data)
+{
+  let player_id = data.player.id;
+  let game_content = await storage.load_by_id(player_id);
+  let card_result = {};
+  if(game_content == []) card_result = {type:'NO_CARDS'};
+  else{
+    let game = new logic.Game(game_content[0]);
+    let index = game.players.findIndex(player=>player.id==player_id);
+    let cards = game.players[index].cards;
+    card_result = cards == [] ? {type:'NO_CARDS'} : {type:'GOT_CARDS', cards: cards};
+  }
+  if(admin_client) admin_client.sendUTF(Object.assign(data, card_result, game.now_player().id == player_id ? {possible_cards: game.possible_cards} : {} ));
 }
 
 async function start_game(data, conn) {
@@ -260,6 +255,9 @@ wsServer.on('request', function (request) {
           break;
         case 'FIND_GAMES':
           find_games(data, connection);
+          break;
+        case 'GET_CARDS':
+          get_cards(data, connection);
           break;
       }
     }
