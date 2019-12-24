@@ -33,12 +33,14 @@ const load_game = (game_id) => new Promise((resolve, reject) => {
     client.HGETALL(game_id, function (err, obj) {
         if (obj == null) reject('No game with such an id')
         else {
-            resolve(parse(obj))
+            resolve(parse(JSON.parse(obj)))
         }
     });
 })
 
 const parse = (game) => {
+    console.log('GAMED');
+    console.log(game);
     game.now = parseInt(game.now);
     console.log('Last_card', game.last_card);
     game.last_card = JSON.parse(game.last_card);
