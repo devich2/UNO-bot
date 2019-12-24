@@ -201,7 +201,6 @@ async function put_card(data) {
   try {
     const player_id = data.player.id;
     const game_content = await storage.load_by_id(player_id);
-    console.log('GAME_CONTENT', game_content)
     game = new logic.Game(game_content[0]);
     if (game.now_player().id != player_id) throw new Error('Not your step');
     game.put_card(find_card(data.card.id)); 
