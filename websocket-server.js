@@ -53,7 +53,8 @@ var server = http.createServer(function(request, response) {
     {
       let game = new logic.Game({id: data.id, players: [data]});
      // console.log(game);
-     console.log(game,data);
+     console.log('CreatedGame:', game);
+     console.log('CreatedData:', data);
       storage.save_game(game);
       conn.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
       if(admin_client!=conn) admin_client.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
@@ -62,6 +63,7 @@ var server = http.createServer(function(request, response) {
 
   async function add_player(data,conn)
   {
+    console.log('AddedData:', data);
     let in_game = await check_in_game(data);
     if(in_game)
     {
@@ -77,6 +79,7 @@ var server = http.createServer(function(request, response) {
 
       game.add_player(data);
       //console.log(game);
+      console.log('AddedData:', game);
       storage.save_game(game);
       broadcast({type: "PLAYER_JOINED", id: game.id, players: game.players }, game.players)
     }
