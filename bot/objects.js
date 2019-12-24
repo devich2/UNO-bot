@@ -77,11 +77,11 @@ class Game {
         return {
             id: this.id,
             now: this.now,
-            last_card: this.last_card ? JSON.stringify(this.last_card.repr()) : null,
-            used_cards: this.used_cards ? JSON.stringify(this.used_cards.map(card => card.repr())) : JSON.stringify([]),
-            cards: this.cards ? JSON.stringify(this.cards.map(card => card.repr())) : JSON.stringify([]),
-            possible_cards: this.possible_cards ? JSON.stringify(this.possible_cards.map(card => card.repr())) : JSON.stringify([]),
-            players: JSON.stringify(this.players.map(player => player.repr())), // ? this.players.map((pl) => pl.repr()): null,
+            last_card: this.last_card ? JSON.stringify(this.last_card) : null,
+            used_cards: this.used_cards ? JSON.stringify(this.used_cards) : JSON.stringify([]),
+            cards: this.cards ? JSON.stringify(this.cards) : JSON.stringify([]),
+            possible_cards: this.possible_cards ? JSON.stringify(this.possible_cards) : JSON.stringify([]),
+            players: JSON.stringify(this.players), // ? this.players.map((pl) => pl.repr()): null,
             turn: this.turn,
             ability: this.ability ? JSON.stringify(this.last_card.content) : 0,
             winner: this.winner
@@ -143,6 +143,7 @@ class Game {
         this.used_cards.push(new Card(Object.assign({}, this.last_card)));
         console.log('Dropped card: ', this.last_card);
         this.last_card = card; //need check
+        console.log('Last card', this.last_card)
         console.log('New card:', this.last_card);
     }
     get_start_cards() {
