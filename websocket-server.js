@@ -83,7 +83,7 @@ async function add_player(data, conn) {
 function broadcast(data, players) {
   clients.forEach(client => {
     for (let key in client) {
-      if (players.findIndex(player => player.id == key) != -1) {
+      if (players && players.findIndex(player => player.id == key) != -1) {
         client[key].sendUTF(JSON.stringify(data));
       }
     }
