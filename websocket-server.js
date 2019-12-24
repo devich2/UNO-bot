@@ -108,13 +108,19 @@ async function get_cards(data) {
   let game_content = await storage.load_by_id(player_id);
   let game = null;
   let card_result = {};
-  if (game_content == []) card_result = {
-    type: 'NO_CARDS'
-  };
+  if (game_content == [])
+    card_result = {
+      type: 'NO_CARDS'
+    };
   else {
     game = new logic.Game(game_content[0]);
-    let index = game.players.findIndex(player => player.id == player_id);
+    const index = game.players.findIndex(player => player.id == player_id);
     let cards = game.players[index].cards;
+    const possible = game.possible_cards;
+    cards = cards.map((val) => {
+      let available = possible.findIndex((v) => v.light == val.id)
+      return available >= 0 ? val.id : possible[available].dark;
+    })
     card_result = cards == [] ? {
       type: 'NO_CARDS'
     } : {
@@ -122,23 +128,21 @@ async function get_cards(data) {
       cards: cards
     };
   }
-  if (admin_client) admin_client.sendUTF(JSON.stringify(Object.assign(data, card_result, game.now_player().id == player_id ? {
-    possible_cards: game.possible_cards
-  } : {})));
+  if (admin_client) admin_client.sendUTF(JSON.stringify(Object.assign(data, card_result)));
 }
 
 const send_game = (type, data, game) => Object.assign(data, {
-    type: type,
-    game: {
-      id: game.id,
-      now: {
-        id: game.now,
-        possible_cards: game.possible_cards
-      },
-      last_card: game.last_card,
-      players: game.players
-    }
-  })
+  type: type,
+  game: {
+    id: game.id,
+    now: {
+      id: game.now,
+      possible_cards: game.possible_cards
+    },
+    last_card: game.last_card,
+    players: game.players
+  }
+})
 
 async function start_game(data, conn) {
   try {
@@ -147,12 +151,14 @@ async function start_game(data, conn) {
     game.start();
     storage.save_game(game);
     broadcast(send_game("STARTED_GAME", data, game));
-  } catch(e){
+  } catch (e) {
     const errs = {
-        "No game with such an id": "NOT_FOUND_GAME",
-        "Not enough players to start": "NOT_ENOUGH_PLAYERS"
+      "No game with such an id": "NOT_FOUND_GAME",
+      "Not enough players to start": "NOT_ENOUGH_PLAYERS"
     }
-   broadcast(send_game(errs[e.message], data, {id: data.game.id}));
+    broadcast(send_game(errs[e.message], data, {
+      id: data.game.id
+    }));
   }
 }
 
@@ -171,7 +177,7 @@ async function call_bluff(data) {
 }
 
 async function pass(data) {
-  try{
+  try {
     let game_content = await storage.load_game(data.game.id);
     let game = new logic.Game(game_content);
     game.pass();
@@ -184,28 +190,28 @@ async function pass(data) {
       now: game.now,
       players: game.players
     }, game.players);
-  }
-  catch{
+  } catch {
 
   }
 }
 
 async function put_card(data) {
-  try{
+  try {
     let game_content = await storage.load_game(data.game.id);
     let game = new logic.Game(game_content);
-    if(game.now_player().id != data.player.id) throw new Error('Not your step');
+    if (game.now_player().id != data.player.id) throw new Error('Not your step');
     game.put_card(data.card);
     storage.save_game(game);
     broadcast(send_game('PUT_CARD', data, game));
-  }
-  catch(e){
+  } catch (e) {
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",
       "Not your step": "NOT_YOU",
       "Put away your card": "NOT_POSSIBLE_CARD"
-  }
-    broadcast(send_game(errs[e.message], data, {id: data.game.id}));
+    }
+    broadcast(send_game(errs[e.message], data, {
+      id: data.game.id
+    }));
   }
 }
 
@@ -218,20 +224,21 @@ async function find_games(data, conn) {
 }
 
 async function set_color(data) {
-  try{
+  try {
     let game_content = await storage.load_game(data.id_creator);
     let game = new logic.Game(game_content);
     game.set_color(data.color);
     storage.save_game(game);
     broadcast(send_game('SET_COLOR', data, game));
-  }
-  catch(e){
+  } catch (e) {
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",
+    }
+    broadcast(send_game(errs[e.message], data, {
+      id: data.game.id
+    }));
   }
-  broadcast(send_game(errs[e.message], data, {id: data.game.id}));
-  }
- 
+
 }
 
 wsServer.on('request', function (request) {
