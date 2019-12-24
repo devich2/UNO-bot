@@ -8,7 +8,7 @@ const cards = require('./bot/uno_cards')
 
 const find_card = (id) => {
   for (let card in cards) {
-    if (card.light == id) return card
+    if (card.light === id) return card
   }
 }
 
@@ -125,6 +125,7 @@ async function get_cards(data) {
     const possible = game.possible_cards;
     cards = cards.map((val) => {
       let available = possible.findIndex((v) => v.light == val.id)
+      console.light(val.id, find_card(val.id))
       return available >= 0 ? {id: val.id, valid: true} : {id: find_card(val.id).dark, valid: false};
     })
     card_result = cards == [] ? {
