@@ -1,4 +1,4 @@
-var webSocketsServerPort = process.env.PORT; //process.env.PORT
+var webSocketsServerPort = 8080; //process.env.PORT
 const logic = require("./bot/objects");
 const storage = require("./bot/db");
 var webSocketServer = require('websocket').server;
@@ -13,7 +13,7 @@ const find_card = (id) => {
 }
 
 var server = http.createServer(function (request, response) {});
-server.listen(webSocketsServerPort, function () {
+server.listen(webSocketsServerPort, '0.0.0.0', function () {
   console.log((new Date()) + " Server is listening on port " +
     webSocketsServerPort);
 });
@@ -53,12 +53,8 @@ async function create_game(data, conn) {
       players: [data.game.player]
     });
     storage.save_game(game);
-    conn.sendUTF(JSON.stringify({
-      type: 'GAME_CREATED',
-      id: game.id,
-      players: game.players
-    }))
-    if (admin_client != conn) admin_client.sendUTF(JSON.stringify({
+
+    if (admin_client) admin_client.sendUTF(JSON.stringify({
       type: 'GAME_CREATED',
       id: game.id,
       players: game.players
@@ -69,18 +65,15 @@ async function create_game(data, conn) {
 async function add_player(data, conn) {
   let in_game = await check_in_game(data);
   if (in_game) {
-    conn.sendUTF(JSON.stringify(Object.assign(data, {
-      type: 'ALREADY_IN_GAME'
-    })));
-    if (admin_client != conn) admin_client.sendUTF(Object.assign(data, {
+    if (admin_client) broadcast(Object.assign(data, {
       type: 'ALREADY_IN_GAME'
     }))
-
   } else {
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
     game.add_player(data.game.player);
     storage.save_game(game);
+    console.log(game);
     broadcast(send_game("PLAYER_JOINED", data, game));
   }
 }
@@ -118,20 +111,32 @@ async function get_cards(data) {
     };
   else {
     game = new logic.Game(game_content[0]);
+    // console.log(game.last_card);
     const index = game.players.findIndex(player => player.id == player_id);
+    const now_player = game.now_player()
     let cards = game.players[index].cards;
     const possible = game.possible_cards;
-    cards = cards.map((val) => {
-      let available = possible.findIndex((v) => v.light == val.id)
-      console.log(val.id, find_card(val.id))
-      return available >= 0 ? {
-        id: val.id,
-        valid: true
-      } : {
+    if (player_id == now_player.id) {
+      console.log(cards, possible)
+      cards = cards.map((val) => {
+        let available = possible.findIndex((v) => (v.id === val.id))
+        // console.log(val.id, find_card(val.id))
+        return available >= 0 ? {
+          id: val.id,
+          valid: true
+        } : {
+          id: find_card(val.id).dark,
+          valid: false
+        };
+      })
+    } else {
+      cards = cards.map((val) => ({
         id: find_card(val.id).dark,
         valid: false
-      };
-    })
+      }))
+    }
+
+    console.log(cards)
     card_result = cards == [] ? {
       type: 'NO_CARDS'
     } : {
@@ -150,7 +155,9 @@ const send_game = (type, data, game) => Object.assign(data, {
       id: game.now,
       possible_cards: game.possible_cards
     },
-    last_card: game.last_card,
+    last_card: {
+      id: game.last_card.repr().id
+    },
     players: game.players
   }
 })
@@ -159,10 +166,14 @@ async function start_game(data, conn) {
   try {
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
+    console.log(game.repr())
     game.start();
+    console.log(game.repr())
+    // console.log(game.last_card);
     storage.save_game(game);
     broadcast(send_game("STARTED_GAME", data, game));
   } catch (e) {
+    console.log(e)
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",
       "Not enough players to start": "NOT_ENOUGH_PLAYERS"
@@ -209,7 +220,7 @@ async function put_card(data) {
     if (game.now_player().id != player_id) throw new Error('Not your step');
     game.put_card(find_card(data.card.id));
     storage.save_game(game);
-   // console.log(game.stringify())
+    // console.log(game.stringify())
     broadcast(send_game('PUT_CARD', data, game));
   } catch (e) {
     const errs = {

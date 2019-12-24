@@ -3,6 +3,7 @@ let abilities = require("./abilities")
 let possibilities = require("./possibilities")
 class Card {
     constructor(dict) {
+        // console.log(dict)
         Object.assign(this, dict)
     }
 
@@ -15,7 +16,7 @@ class Card {
     }
     repr() {
         return {
-            id: this.light
+            id: this.id || this.light
         }
     }
 }
@@ -56,19 +57,16 @@ class Game {
     constructor(dict) {
         this.id = dict.id
         this.now = dict.now || 0
-        this.last_card = dict.last_card ? new Card(this.res_card_id(dict.last_card.id)) : null;
-        this.used_cards = dict.used_cards ? dict.used_cards.map(card => new Card(this.res_card_id(card.id))) : [];
-        this.cards = dict.cards ? dict.cards.map(card => new Card(this.res_card_id(card.id))) : [];
-        this.possible_cards = dict.possible_cards ? dict.possible_cards.map(card => new Card(this.res_card_id(card.id))) : [];
+        this.last_card = dict.last_card ? new Card(dict.last_card) : null;
+        this.used_cards = dict.used_cards ? dict.used_cards.map(card => new Card(card)) :[];
+        this.cards = dict.cards ? dict.cards.map(card => new Card(card)) : [];
+        this.possible_cards = dict.possible_cards ? dict.possible_cards.map(card => new Card(card)) : [];
         this.players = dict.players ? dict.players.map(pl => new Player(pl)) : [];
         this.turn = dict.turn || 1 // 1 | -1
         this.winner = dict.winner ? dict.winner : 0; //1 | 0
         this.ability = abilities[dict.ability] ? abilities[dict.ability]() : null;
     }
-    res_card_id(id) {
-        const i = card_deck.findIndex(card => card.light == id);
-        return card_deck[i];
-    }
+
     now_player() {
         return this.players[this.now]
     }
@@ -77,13 +75,13 @@ class Game {
         return {
             id: this.id,
             now: this.now,
-            last_card: this.last_card ? JSON.stringify(this.last_card.repr()) : null,
-            used_cards: this.used_cards ? JSON.stringify(this.used_cards.map(card => card.repr())) : JSON.stringify([]),
-            cards: this.cards ? JSON.stringify(this.cards.map(card => card.repr())) : JSON.stringify([]),
-            possible_cards: this.possible_cards ? JSON.stringify(this.possible_cards.map(card => card.repr())) : JSON.stringify([]),
-            players: JSON.stringify(this.players.map(player => player.repr())), // ? this.players.map((pl) => pl.repr()): null,
+            last_card: this.last_card ,
+            used_cards: this.used_cards ,
+            cards: this.cards.map(card => card.repr()) ,
+            possible_cards: this.possible_cards.map(card => card.repr()),
+            players: this.players.map(player => player.repr()),
             turn: this.turn,
-            ability: this.ability ? JSON.stringify(this.last_card.content) : 0,
+            ability: this.ability ? this.last_card.content : 0,
             winner: this.winner
         }
     }
@@ -165,10 +163,12 @@ class Game {
         let random_int;
         do {
             random_int = this.getRandomInt(0, this.cards.length - 1);
-            this.last_card = this.cards.slice(random_int, random_int + 1)[0];
+            this.last_card = this.cards[random_int];
         }
         while (this.last_card.is_special());
         this.cards.splice(random_int, 1);
+        console.log(this.cards);
+        console.log('Last card', this.last_card);
         return this.end_turn();
     }
     add_possible() {

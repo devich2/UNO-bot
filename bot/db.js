@@ -2,8 +2,9 @@ const client = require('./redis')
 
 const save_game = (game) => {
     console.log('Saved');
-    //console.log('Game', game)
-    client.HMSET(game.id, game.repr(), function (err, res) {})
+    client.SET(game.id, JSON.stringify(game.repr()), (err, val) => {
+        console.warn(err)
+    })
 
 }
 exports.save_game = save_game
@@ -12,7 +13,7 @@ const load_games_by_player_id = (player_id) => {
     return new Promise((resolve, reject) => {
         let games = [];
         client.keys("*", function (err, keys) {
-            // console.log(keys);
+             console.log(keys);
             if (keys == undefined) resolve(games);
             else {
                 Promise.all(keys.map(async key => {
@@ -30,27 +31,13 @@ exports.load_by_id = load_games_by_player_id
 
 const load_game = (game_id) => new Promise((resolve, reject) => {
     // console.log('Searching',game_id);
-    client.HGETALL(game_id, function (err, obj) {
+    client.GET(game_id, function (err, obj) {
         if (obj == null) reject('No game with such an id')
         else {
-            resolve(parse(obj))
+            resolve(JSON.parse(obj))
         }
     });
 })
-
-const parse = (game) => {
-    console.log('NEWASD',JSON.parse(game.players))
-    game.now = parseInt(game.now);
-    game.last_card = JSON.parse(game.last_card);
-    game.players = JSON.parse(game.players);
-    game.turn = parseInt(game.turn);
-    game.used_cards = JSON.parse(game.used_cards);
-    game.possible_cards = JSON.parse(game.possible_cards);
-    game.winner = parseInt(game.winner);
-    game.cards = JSON.parse(game.cards);
-    return game;
-
-}
 
 exports.load_game = load_game
 
