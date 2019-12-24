@@ -111,6 +111,7 @@ async function delete_player(data, conn) {
 
 async function get_cards(data) {
   let player_id = data.player.id;
+  console.log('IDPLAUER', data);
   let game_content = await storage.load_by_id(player_id);
   let card_result = {};
   if (game_content == []) card_result = {
