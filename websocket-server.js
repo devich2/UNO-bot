@@ -40,14 +40,7 @@ async function check_in_game(data) {
 async function create_game(data, conn) {
   let in_game = await check_in_game(data);
   if (in_game) {
-    conn.sendUTF(JSON.stringify({
-      type: 'ALREADY_IN_GAME',
-      player: data
-    }))
-    if (admin_client != conn) admin_client.sendUTF(JSON.stringify({
-      type: 'ALREADY_IN_GAME',
-      player: data
-    }))
+    await add_player(data, conn)
   } else {
     let game = new logic.Game({
       id: data.game.id,
