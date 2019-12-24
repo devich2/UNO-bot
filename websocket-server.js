@@ -53,6 +53,7 @@ var server = http.createServer(function(request, response) {
     {
       let game = new logic.Game({id: data.id, players: [data]});
      // console.log(game);
+     console.log(game,data);
       storage.save_game(game);
       conn.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
       if(admin_client!=conn) admin_client.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
