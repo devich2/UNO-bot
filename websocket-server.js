@@ -7,7 +7,7 @@ const cards = require('./bot/uno_cards')
 
 
 const find_card = (id) => {
-  for (let card in cards) {
+  for (let card of cards) {
     if (card.light === id) return card
   }
 }
