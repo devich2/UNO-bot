@@ -8,7 +8,7 @@ const cards = require('./bot/uno_cards')
 
 const find_card = (id) => {
   for (let card of cards) {
-    if (card.light == id) return card
+    if (card.light === id) return card
   }
 }
 
@@ -212,7 +212,9 @@ async function put_card(data) {
       "Not your step": "NOT_YOU",
       "Put away your card": "NOT_POSSIBLE_CARD"
     }
-    broadcast(send_game(errs[e.message], data, game));
+    broadcast(send_game(errs[e.message], data, {
+      id: game.id
+    }));
   }
 }
 
