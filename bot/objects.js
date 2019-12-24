@@ -215,9 +215,9 @@ class Game {
         console.log('Put card:', card);
         let content = card.is_special() ? card.content : 'simple';
         if (this.check_possible(card)) { //!
-            console.log(this.now_player().cards)
+            console.log('player', his.now_player().cards)
             this.drop(this.now_player().remove_card(card));
-            console.log(this.now_player().cards)
+            console.log('player1', this.now_player().cards)
             this.ability = abilities[content](this);
             return this.end_turn();
         } else throw new Error('Put away your card');
