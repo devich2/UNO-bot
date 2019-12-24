@@ -106,12 +106,13 @@ async function get_cards(data) {
   let player_id = data.player.id;
   console.log('IDPLAUER', data);
   let game_content = await storage.load_by_id(player_id);
+  let game = null;
   let card_result = {};
   if (game_content == []) card_result = {
     type: 'NO_CARDS'
   };
   else {
-    let game = new logic.Game(game_content[0]);
+    game = new logic.Game(game_content[0]);
     let index = game.players.findIndex(player => player.id == player_id);
     let cards = game.players[index].cards;
     card_result = cards == [] ? {
