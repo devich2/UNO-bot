@@ -51,7 +51,7 @@ async function create_game(data, conn) {
   } else {
     let game = new logic.Game({
       id: data.game.id,
-      players: [data.game.player]    
+      players: [data.game.player]
     });
     // console.log(game);
     console.log('CreatedGame:', game);
@@ -72,10 +72,14 @@ async function create_game(data, conn) {
 
 async function add_player(data, conn) {
   console.log('AddedData:', data);
-  let in_game = await check_in_game(data); 
+  let in_game = await check_in_game(data);
   if (in_game) {
-    conn.sendUTF(JSON.stringify(Object.assign(data,{type: 'ALREADY_IN_GAME'})));
-    if (admin_client != conn) admin_client.sendUTF(Object.assign( data, {type: 'ALREADY_IN_GAME'}))
+    conn.sendUTF(JSON.stringify(Object.assign(data, {
+      type: 'ALREADY_IN_GAME'
+    })));
+    if (admin_client != conn) admin_client.sendUTF(Object.assign(data, {
+      type: 'ALREADY_IN_GAME'
+    }))
 
   } else {
     let content = await storage.load_game(data.game.id);
@@ -102,48 +106,68 @@ function broadcast(data, players) {
 
 }
 async function delete_player(data, conn) {
-  let content =  await storage.load_game(data.game.id);
+  let content = await storage.load_game(data.game.id);
   let game = new logic.Game(content);
   let deleted_player = game.remove_player(data.game.player);
   storage.delete_game(data.game.id);
-  broadcast(Object.assign(data, { type: "PLAYER_LEFT", left: deleted_player}), game.players);                                                                       
+  broadcast(Object.assign(data, {
+    type: "PLAYER_LEFT",
+    left: deleted_player
+  }), game.players);
 }
 
-async function get_cards(data)
-{
+async function get_cards(data) {
   let player_id = data.player.id;
   let game_content = await storage.load_by_id(player_id);
   let card_result = {};
-  if(game_content == []) card_result = {type:'NO_CARDS'};
-  else{
+  if (game_content == []) card_result = {
+    type: 'NO_CARDS'
+  };
+  else {
     let game = new logic.Game(game_content[0]);
-    let index = game.players.findIndex(player=>player.id==player_id);
+    let index = game.players.findIndex(player => player.id == player_id);
     let cards = game.players[index].cards;
-    card_result = cards == [] ? {type:'NO_CARDS'} : {type:'GOT_CARDS', cards: cards};
+    card_result = cards == [] ? {
+      type: 'NO_CARDS'
+    } : {
+      type: 'GOT_CARDS',
+      cards: cards
+    };
   }
-  if(admin_client) admin_client.sendUTF(Object.assign(data, card_result, game.now_player().id == player_id ? {possible_cards: game.possible_cards} : {} ));
+  if (admin_client) admin_client.sendUTF(Object.assign(data, card_result, game.now_player().id == player_id ? {
+    possible_cards: game.possible_cards
+  } : {}));
+}
+
+const send_game = (type, data, game, conn) => {
+  const new_data = Object.assign(data, {
+    type: type,
+    game: {
+      id: game.id,
+      now: {
+        id: game.now,
+        possible_cards: game.possible_cards
+      },
+      last_card: game.last_card,
+      players: game.players
+    }
+  })
 }
 
 async function start_game(data, conn) {
-  let content = await storage.load_game(data.id);
   try {
+    let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
     game.start();
     storage.save_game(game);
-    broadcast({
-      type: "GAME_STARTED",
-      id: game.id,
-      possible_cards: game.possible_cards,
-      last_card: game.last_card,
-      now: game.now,
-      players: game.players
-    }, game.players);
-  } catch {
-    conn.sendUTF(JSON.stringify({
-      type: 'NOT_ENOUGH_PLAYERS'
-    }));
+    broadcast(send_game("STARTED_GAME", data, game, conn));
+  } catch(e){
+    const errs = {
+        "No game with such an id": "NOT_FOUND_GAME",
+        "Not enough players to start": "NOT_ENOUGH_PLAYERS"
+    }
+   broadcast(send_game(errs[e.message], data, {id: data.game.id}, conn));
   }
-
 }
 
 async function call_bluff(data) {
@@ -175,20 +199,15 @@ async function pass() {
 }
 
 async function put_card(data) {
-  if (!data.id_creator) {
-
+  try{
+    let game = await storage.load_game(data.game.id);
+    game.put_card(data.card);
+    storage.save_game(game);
+    broadcast(send_game('PUT_CARD', data, game, conn));
   }
-  let game = await storage.load_game(data.id_creator);
-  game.put_card(data.card);
-  storage.save_game(game);
-  broadcast(Object.assign({
-    type: "PUT_CARD",
-    id: game.id,
-    possible_cards: game.possible_cards,
-    last_card: game.last_card,
-    now: game.now,
-    players: game.players
-  }), game.players);
+  catch{
+    broadcast(send_game('NOT_FOUND_GAME', data, {id: data.game.id}, conn));
+  }
 }
 
 async function find_games(data, conn) {
@@ -229,7 +248,6 @@ wsServer.on('request', function (request) {
           else save_connection(data, connection);
           break;
         case 'CREATE_GAME':
-          console.log('nice');
           create_game(data, connection);
           break;
         case 'ADD_PLAYER':
