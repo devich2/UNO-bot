@@ -197,11 +197,13 @@ async function pass(data) {
 }
 
 async function put_card(data) {
+  let game = null;
   try {
-    let game_content = await storage.load_by_id(d);
-    let game = new logic.Game(game_content);
-    if (game.now_player().id != data.player.id) throw new Error('Not your step');
-    game.put_card(data.card);
+    const player_id = data.player.id;
+    const game_content = await storage.load_by_id(player_id);
+    game = new logic.Game(game_content[0]);
+    if (game.now_player().id != player_id) throw new Error('Not your step');
+    game.put_card(find_card(data.card.id)); 
     storage.save_game(game);
     broadcast(send_game('PUT_CARD', data, game));
   } catch (e) {
@@ -211,7 +213,7 @@ async function put_card(data) {
       "Put away your card": "NOT_POSSIBLE_CARD"
     }
     broadcast(send_game(errs[e.message], data, {
-      id: data.game.id
+      id: game.id
     }));
   }
 }
