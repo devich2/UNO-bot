@@ -3,8 +3,14 @@ const logic = require("./bot/objects");
 const storage = require("./bot/db");
 var webSocketServer = require('websocket').server;
 var http = require('http');
+const cards = require('./bot/uno_cards')
 
 
+const find_card = (id) => {
+  for (let card in cards) {
+    if (card.light == id) return card
+  }
+}
 
 var server = http.createServer(function (request, response) {});
 server.listen(webSocketsServerPort, function () {
@@ -119,7 +125,7 @@ async function get_cards(data) {
     const possible = game.possible_cards;
     cards = cards.map((val) => {
       let available = possible.findIndex((v) => v.light == val.id)
-      return available >= 0 ? val.id : possible[available].dark;
+      return available >= 0 ? {id: val.id, valid: true} : {id: get_cards(val.id).dark, valid: false};
     })
     card_result = cards == [] ? {
       type: 'NO_CARDS'

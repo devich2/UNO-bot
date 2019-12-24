@@ -2,7 +2,6 @@ const client = require('./redis')
 
 const save_game = (game) => {
     console.log('Saved');
-    console.log('Game', game)
     client.HMSET(game.id, game.repr(), function(err, res)
     {
     })
@@ -15,7 +14,7 @@ const load_games_by_player_id = (player_id)=>
 return new Promise((resolve, reject) => { 
     let games = [];  
     client.keys("*", function (err, keys) { 
-        console.log(keys);
+        console.log('Keys',keys);
         if(keys == undefined) resolve(games);
         else{
             Promise.all(keys.map(async key => {
@@ -32,7 +31,6 @@ exports.load_by_id = load_games_by_player_id
 const load_game = (game_id) => new Promise((resolve, reject) => { 
     console.log('Searching',game_id);
     client.HGETALL(game_id, function (err, obj) {
-        console.log(err,'', obj);
         if(obj == null) reject('No game with such an id')
         else {resolve(parse(obj))}
     });
