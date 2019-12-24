@@ -122,7 +122,7 @@ async function get_cards(data) {
       cards: cards
     };
   }
-  if (admin_client) admin_client.sendUTFJ(JSON.stringify(Object.assign(data, card_result, game.now_player().id == player_id ? {
+  if (admin_client) admin_client.sendUTF(JSON.stringify(Object.assign(data, card_result, game.now_player().id == player_id ? {
     possible_cards: game.possible_cards
   } : {})));
 }
@@ -186,7 +186,7 @@ async function pass(data) {
     }, game.players);
   }
   catch{
-    
+
   }
 }
 
