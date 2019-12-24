@@ -39,7 +39,7 @@ const load_game = (game_id) => new Promise((resolve, reject) => {
 })
 
 const parse = (game) => {
-    console.log(game)
+    console.log('NEWASD',game)
     game.now = parseInt(game.now);
     game.last_card = JSON.parse(game.last_card);
     game.players = JSON.parse(game.players);
