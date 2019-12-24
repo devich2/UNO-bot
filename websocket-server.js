@@ -47,15 +47,15 @@ var server = http.createServer(function(request, response) {
     let in_game = await check_in_game(data);
     if(in_game) {
       conn.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME', player: data}))
-      admin_client.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME', player: data}))
+     if(admin_client!=conn) admin_client.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME', player: data}))
     }
     else
     {
-      let game = new logic.Game({id: data.username, players: [data]});
+      let game = new logic.Game({id: data.id, players: [data]});
      // console.log(game);
-     admin_client.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
       storage.save_game(game);
       conn.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
+      if(admin_client!=conn) admin_client.sendUTF(JSON.stringify({type: 'GAME_CREATED', id: game.id, players: game.players}))
      } 
   }
 
@@ -65,6 +65,7 @@ var server = http.createServer(function(request, response) {
     if(in_game)
     {
       conn.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME', player:data}))
+      if(admin_client!=conn) admin_client.sendUTF(JSON.stringify({type: 'ALREADY_IN_GAME', player:data}))
     }
     else
     {
