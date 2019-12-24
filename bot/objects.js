@@ -100,9 +100,9 @@ class Game {
     }
     remove_player(dict) //need delete player cards
     {
-       let i = this.players.findIndex(player=>player.id ==dict.id);
+       let i = this.players.findIndex(player=>player.id == dict.id);
        this.now--;
-       return this.players.splice(i,1);
+       return this.players.splice(i,1)[0];
     }
     next(turns = 1) {
         const turn = this.now + turns * this.turn
@@ -165,7 +165,7 @@ class Game {
       }
     start()
     {
-        if(this.is_over()) throw new Error('Not enough players to start!')
+        if(this.is_over()) throw new Error('Not enough players to start')
         this.shuffle(card_deck).forEach((card)=>
         {
             for(let i = 0; i<card.quantity; i++)
@@ -247,7 +247,7 @@ class Game {
            this.ability = abilities[content](this);
            return this.end_turn();
        }
-       else throw new Error('Put away your card!');
+       else throw new Error('Put away your card');
     }
     check_honest(check_honest = false)
     {
