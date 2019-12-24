@@ -48,6 +48,8 @@ const parse = (game) => {
     game.possible_cards = JSON.parse(game.possible_cards);
     game.winner = parseInt(game.winner);
     game.cards = JSON.parse(game.cards);
+    console.log('GAMED');
+    console.log(game);
     return game;
 
 }
