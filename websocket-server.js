@@ -170,41 +170,35 @@ async function start_game(data, conn) {
 }
 
 async function call_bluff(data) {
-  let game = await storage.load_game(data.id_creator);
+  let game_content = await storage.load_game(data.game.id);
+  let game = new logic.Game(game_content);
   game.check_honest(true);
   storage.save_game(game);
-  broadcast({
-    type: "CALLED_BLUFF",
-    id: game.id,
-    possible_cards: game.possible_cards,
-    last_card: game.last_card,
-    now: game.now,
-    players: game.players
-  }, game.players);
+  broadcast(send_game('CALLED_BLUFF', data, game));
 }
 
 async function pass(data) {
   try {
     let game_content = await storage.load_game(data.game.id);
     let game = new logic.Game(game_content);
+    if(game.now_player().id != data.player.id) throw new Error('Not your step"');
     game.pass();
     storage.save_game(game);
-    broadcast({
-      type: "PASSED",
-      id: game.id,
-      possible_cards: game.possible_cards,
-      last_card: game.last_card,
-      now: game.now,
-      players: game.players
-    }, game.players);
+    broadcast(send_game('PASSED', data, game));
   } catch {
-
+    const errs = {
+      "No game with such an id": "NOT_FOUND_GAME",
+      "Not your step": "NOT_YOU",
+    }
+    broadcast(send_game(errs[e.message], data, {
+      id: data.game.id
+    }));
   }
 }
 
 async function put_card(data) {
   try {
-    let game_content = await storage.load_game(data.game.id);
+    let game_content = await storage.load_by_id(d);
     let game = new logic.Game(game_content);
     if (game.now_player().id != data.player.id) throw new Error('Not your step');
     game.put_card(data.card);
@@ -236,7 +230,7 @@ async function set_color(data) {
     let game = new logic.Game(game_content);
     game.set_color(data.color);
     storage.save_game(game);
-    broadcast(send_game('SET_COLOR', data, game));
+    broadcast(send_game('SET_COLOR', data, game));           
   } catch (e) {
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",

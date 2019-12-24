@@ -47,10 +47,11 @@ const abilities =
     },
     'draw':  ()=>
     {
-       return (game)=>
+       return (game,res)=>
        {
           game.now_player().cards =  game.now_player().cards.concat(game.get_some_cards(2));
           game.next();
+          res.step = true;
           return null;
        }
     },
@@ -70,10 +71,18 @@ const abilities =
       //   cards.splice(i,1);
       return null;
     },
-    'draw_one': (game)=>
+    'draw_one': (game, res)=>
     {
-        game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(1));
-        return null;
+      let card = game.get_some_cards(1)[0];
+      if(check_possible(card)) 
+      {
+         res.step = false;
+      }
+      else{
+         game.now_player().cards = game.now_player().cards.concat([card]);
+         res.step = true;
+      }
+      return null;
     }
 }
 module.exports = abilities;

@@ -203,7 +203,7 @@ class Game {
             this.winner = 1;
         }
         return res;
-    }
+    }         
     check_over() {
         let res = {};
         if (this.is_over()) {
@@ -257,9 +257,10 @@ class Game {
         return return_object;
     }
     pass() {
+        let next_step = {};
         let call = this.ability || abilities['draw_one'];
-        this.ability = call(this);
-        return this.end_turn();
+        this.ability = call(this, next_step);
+        return this.end_turn(next_step.step);
     }
     is_over() {
         return this.players.length <= 1;
