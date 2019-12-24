@@ -53,9 +53,6 @@ async function create_game(data, conn) {
       id: data.game.id,
       players: [data.game.player]
     });
-    // console.log(game);
-    console.log('CreatedGame:', game);
-    console.log('CreatedData:', data);
     storage.save_game(game);
     conn.sendUTF(JSON.stringify({
       type: 'GAME_CREATED',
@@ -86,11 +83,7 @@ async function add_player(data, conn) {
     let game = new logic.Game(content);
     game.add_player(data.game.player);
     storage.save_game(game);
-    broadcast({
-      type: "PLAYER_JOINED",
-      id: game.id,
-      players: game.players
-    }, game.players)
+    broadcast(send_game("PLAYER_JOINED", data, game, conn));
   }
 }
 
@@ -205,7 +198,11 @@ async function put_card(data) {
     storage.save_game(game);
     broadcast(send_game('PUT_CARD', data, game, conn));
   }
-  catch{
+  catch(e){
+    const errs = {
+      "No game with such an id": "NOT_FOUND_GAME",
+      "Not your step": "NOT_YOU"
+  }
     broadcast(send_game('NOT_FOUND_GAME', data, {id: data.game.id}, conn));
   }
 }
