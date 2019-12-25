@@ -1,4 +1,4 @@
-var webSocketsServerPort = 8080; //process.env.PORT
+var webSocketsServerPort = process.env.PORT; //process.env.PORT
 const logic = require("./bot/objects");
 const storage = require("./bot/db");
 var webSocketServer = require('websocket').server;
