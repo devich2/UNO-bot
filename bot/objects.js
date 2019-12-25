@@ -34,7 +34,7 @@ class Player {
         this.id = dict.id
         this.username = dict.username ? dict.username : '';
         this.full_name = dict.full_name ? dict.full_name : dict.first_name + (dict.last_name ? ' ' + dict.last_name : '')
-        this.cards = dict.cards ? dict.cards.map(card => new Card(card)) : [];
+        this.cards = dict.cards ? dict.cards.map(card => find_card(card.id)) : [];
     }
 
     toString() {
@@ -44,7 +44,6 @@ class Player {
         const i = this.cards.findIndex(
             c => c.content == card.content && c.type == card.type,
         );
-        console.log('Deleted:', i, this.cards);
         return this.cards.splice(i, 1)[0];
     }
     repr() {
@@ -61,16 +60,18 @@ exports.Player = Player
 
 class Game {
     constructor(dict) {
+        console.log('DICT ID',dict.id);
         this.id = dict.id
         this.now = dict.now || 0
-        this.last_card = dict.last_card ? new Card(dict.last_card) : null;
-        this.used_cards = dict.used_cards ? dict.used_cards.map(card => new Card(card)) :[];
-        this.cards = dict.cards ? dict.cards.map(card => new Card(card)) : [];
-        this.possible_cards = dict.possible_cards ? dict.possible_cards.map(card => new Card(card)) : [];
+        this.last_card = dict.last_card ? find_card(dict.last_card.id) : null;
+        this.used_cards = dict.used_cards ? dict.used_cards.map(card => find_card(card.id)) :[];
+        this.cards = dict.cards ? dict.cards.map(card => find_card(card.id)) : [];
+        this.possible_cards = dict.possible_cards ? dict.possible_cards.map(card => find_card(card.id)) : [];
         this.players = dict.players ? dict.players.map(pl => new Player(pl)) : [];
         this.turn = dict.turn || 1 // 1 | -1
         this.winner = dict.winner ? dict.winner : 0; //1 | 0
         this.ability = abilities[dict.ability] ? abilities[dict.ability]() : null;
+        this.started = dict.started ? dict.started : false;
     }
 
     now_player() {
@@ -88,7 +89,9 @@ class Game {
             players: this.players.map(player => player.repr()),
             turn: this.turn,
             ability: this.ability ? this.last_card.content : 0,
-            winner: this.winner
+            winner: this.winner,
+            started: this.started
+         
         }
     }
 
@@ -145,8 +148,9 @@ class Game {
     }
     drop(card) {
         this.used_cards.push(new Card(Object.assign({}, this.last_card)));
-        console.log('Dropped card: ', this.last_card);
+        console.log('Previous card: ', this.last_card);
         this.last_card = card; //need check
+        console.log('New last card', this.last_card);
     }
     get_start_cards() {
         return this.get_some_cards(7);
@@ -156,35 +160,45 @@ class Game {
     }
     start() {
         if (this.is_over()) throw new Error('Not enough players to start')
-        this.shuffle(card_deck).forEach((card) => {
-            for (let i = 0; i < card.quantity; i++) {
-                this.cards.push(new Card(card));
-            }
-        })
-        this.players.forEach(player => {
-            player.cards = this.get_start_cards();
-        });
-        this.players = this.shuffle(this.players);
-        this.now = this.getRandomInt(0, this.players.length - 1);
-        let random_int;
-        do {
-            random_int = this.getRandomInt(0, this.cards.length - 1);
-            this.last_card = this.cards[random_int];
+        else if (this.started)
+        {
+            throw new Error('GAME_ALREADY_STARTED');
         }
-        while (find_card(this.last_card.id).is_special());
-        this.cards.splice(random_int, 1);
-        console.log(this.cards);
-        console.log('Last card', this.last_card);
-        return this.end_turn();
+        else{
+            this.shuffle(card_deck).forEach((card) => {
+                for (let i = 0; i < card.quantity; i++) {
+                    this.cards.push(new Card(card));
+                }
+            })
+            this.players.forEach(player => {
+                player.cards = this.get_start_cards();
+            });
+            this.players = this.shuffle(this.players);
+            this.now = this.getRandomInt(0, this.players.length - 1);
+            let random_int;
+            do {
+                random_int = this.getRandomInt(0, this.cards.length-1) ; //this.getRandomInt(0, this.cards.length - 1);
+                this.last_card = this.cards[random_int];
+                console.log('Last card', this.last_card);
+                console.log('Id', this.cards[random_int].id)
+            }
+            while (this.last_card == undefined || (this.last_card == undefined && this.last_card.is_special()));
+            this.cards.splice(random_int, 1);
+            console.log('Cards length', this.cards.length);
+            console.log('Last after start_game card', this.last_card);
+            return this.end_turn();
+        }  
     }
     add_possible() {
         console.log('Added possible');
         this.possible_cards = [];
-        let last_card = find_card(this.last_card.id);
-        let content = last_card.is_special() ? last_card.content : 'simple';
-
+        const last_card = this.last_card;
+         let content = (last_card && last_card.is_special()) ? last_card.content : 'simple';
+         console.log('Last card', last_card, 'Content', content)
         let poss_cards = possibilities[content](last_card);
-        let cards = this.now_player().cards.map(card=>find_card(card.id));
+        console.log('Now cards',this.now_player().cards);
+        let cards = this.now_player().cards;
+        console.log('Cards 0 for adding possible', cards[0]);
         outer: for (let card of cards) {
             inner: for (let poss in poss_cards) {
                 let pos = true;
@@ -198,7 +212,7 @@ class Game {
     }
 
     check_possible(poss_card) {
-        return this.possible_cards.map(card=>find_card(card.id)).findIndex(card => card.content == poss_card.content && card.type == poss_card.type) == -1 ? false : true;
+        return this.possible_cards.findIndex(card => card.content == poss_card.content && card.type == poss_card.type) == -1 ? false : true;
     }
 
     check_winner() {
@@ -223,9 +237,9 @@ class Game {
         console.log('Put card:', card);
         let content = card.is_special() ? card.content : 'simple';
         if (this.check_possible(card)) { //!
-            console.log('player', this.now_player().cards)
+            console.log('Player cards before putting card', this.now_player().cards)
             this.drop(this.now_player().remove_card(card));
-            console.log('player1', this.now_player().cards)
+            console.log('Player cards after putting card', this.now_player().cards)
             this.ability = abilities[content](this);
             return this.end_turn();
         } else throw new Error('Put away your card');
@@ -265,11 +279,11 @@ class Game {
         });
         return return_object;
     }
-    pass() {
-        let next_step = {};
+    pass(skip) {
         let call = this.ability || abilities['draw_one'];
-        this.ability = call(this, next_step);
-        return this.end_turn(next_step.step);
+        this.ability = call(this, skip);
+        console.log('CURRENT PLAYER CARDS LENGTH FOR PASS',this.now_player().cards.length)
+        return this.end_turn(skip);
     }
     is_over() {
         return this.players.length <= 1;

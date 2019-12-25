@@ -1,5 +1,5 @@
 const client = require('./redis')
-
+const logic = require('./objects')
 const save_game = (game) => {
     console.log('Saved');
     client.SET(game.id, JSON.stringify(game.repr()), (err, val) => {
@@ -34,6 +34,8 @@ const load_game = (game_id) => new Promise((resolve, reject) => {
     client.GET(game_id, function (err, obj) {
         if (obj == null) reject('No game with such an id')
         else {
+            console.log('Parsed object', JSON.parse(obj))
+            console.log('Gamed object', new logic.Game(JSON.parse(obj)))
             resolve(JSON.parse(obj))
         }
     });

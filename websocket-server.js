@@ -38,7 +38,7 @@ function save_connection(data, conn) {
 }
 
 async function check_in_game(data) {
-  console.log('Id', data.game.id);
+  console.log('Game id to check in_game', data.game.id);
   let games = await storage.load_by_id(data.game.player.id);
   return games.length != 0;
 }
@@ -73,7 +73,7 @@ async function add_player(data, conn) {
     let game = new logic.Game(content);
     game.add_player(data.game.player);
     storage.save_game(game);
-    console.log(game);
+    console.log('Game after adding player',game);
     broadcast(send_game("PLAYER_JOINED", data, game));
   }
 }
@@ -102,50 +102,57 @@ async function delete_player(data, conn) {
 
 async function get_cards(data) {
   let player_id = data.player.id;
-  console.log('Player_d', player_id);
+  console.log('Player_id to get_cards', player_id);
   let game_content = await storage.load_by_id(player_id);
-  let game = null;
-  let card_result = {};
+  let game = null, cards;
   if (game_content == [])
-    card_result = {
-      type: 'NO_CARDS'
-    };
+    cards = [];
   else {
-    console.log(game_content);;
+    console.log('Game content for getting cards:',game_content);;
     game = new logic.Game(game_content[0] || {});
     const index = game.players.findIndex(player => player.id == player_id);
     const now_player = game.now_player()
     console.log('Now player id', now_player.id)
-    let cards = game.players[index].cards;
+    cards = game.players[index].cards;
     const possible = game.possible_cards;
+    console.log('Possible cards for getting cards:', possible);
+    console.log('Index of player getting cards', index);
+    console.log('Cards of current player to add possible', cards);
     if (player_id == now_player.id) {
-      console.log(cards, possible)
-      cards = cards.map((val) => {
-        let available = possible.findIndex((v) => (v.id === val.id))
-        // console.log(val.id, find_card(val.id))
-        return available >= 0 ? {
-          id: val.id,
-          valid: true
-        } : {
-          id: find_card(val.id).dark,
+      cards = cards.map((card) => {
+        if(game.check_possible(card))
+        {
+          return {
+            id: card.light,
+            valid: true
+          }
+        }
+        else
+        {
+          return {
+            id: card.dark,
+            valid: false
+          };
+        }
+      })
+    }
+    else{
+      cards = cards.map((card) => {
+        return {
+          id: card.dark,
           valid: false
         };
-      })
-    } else {
-      cards = cards.map((val) => ({
-        id: find_card(val.id).dark,
-        valid: false
-      }))
+      }
+      )
     }
-
-    console.log(cards)
-    card_result = cards == [] ? {
-      type: 'NO_CARDS'
-    } : {
-      type: 'GOT_CARDS',
-      cards: cards
-    };
   }
+  console.log('Getting cards', cards);
+  let card_result = cards == [] ? {
+    type: 'NO_CARDS'
+  } : {
+    type: 'GOT_CARDS',
+    cards: cards
+  };
   if (admin_client) admin_client.sendUTF(JSON.stringify(Object.assign(data, card_result)));
 }
 
@@ -158,7 +165,7 @@ const send_game = (type, data, game) => Object.assign(data, {
       possible_cards: game.possible_cards
     },
     last_card: {
-      id: game.last_card.id || game.last_card.light
+      id: game.last_card && (game.last_card.id || game.last_card.light)
     },
     players: game.players
   }
@@ -168,9 +175,9 @@ async function start_game(data, conn) {
   try {
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
-    console.log(game.repr())
+    console.log('Game before starting ', game.repr())
     game.start();
-    console.log(game.repr())
+    console.log('Game after starting', game.repr())
     // console.log(game.last_card);
     storage.save_game(game);
     broadcast(send_game("STARTED_GAME", data, game));
@@ -194,19 +201,25 @@ async function call_bluff(data) {
   broadcast(send_game('CALLED_BLUFF', data, game));
 }
 
-async function pass(data) {
+async function pass(data, skip) {
   try {
+    console.log('Skip', skip);
+    console.log('PASSING');
+    console.log(data.game.id);
     let game_content = await storage.load_game(data.game.id);
+    console.log('GAME _CONTENT', game_content)
     let game = new logic.Game(game_content);
-    if (game.now_player().id != data.player.id) throw new Error('Not your step"');
-    game.pass();
+    if (game.now_player().id != data.game.player.id) throw new Error('Not your step"');
+    game.pass(skip);
     storage.save_game(game);
-    broadcast(send_game('PASSED', data, game));
-  } catch {
+    broadcast(send_game(skip ? 'PUT_CARD' : 'PREPARE_PASS', data, game));
+  } catch(e) {
+    console.log(e);
     const errs = {
       "No game with such an id": "NOT_FOUND_GAME",
       "Not your step": "NOT_YOU",
     }
+    console.log(e.message);
     broadcast(send_game(errs[e.message], data, {
       id: data.game.id
     }));
@@ -290,10 +303,10 @@ wsServer.on('request', function (request) {
           put_card(data);
           break;
         case 'CALL_BLUFF':
-          call_bluff(data);
+          call_bluff(data);          
           break;
         case 'PASS':
-          pass(data);
+          pass(data, true);
           break;
         case 'SET_COLOR':
           set_color(data);
@@ -303,6 +316,9 @@ wsServer.on('request', function (request) {
           break;
         case 'GET_CARDS':
           get_cards(data, connection);
+          break;
+        case 'GET_ONE_CARD':
+          pass(data, false);
           break;
       }
     }

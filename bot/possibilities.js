@@ -1,4 +1,15 @@
+const cards = require('./uno_cards')
+const {Card} = require('./objects')
+
+
+const find_card = (id) => {
+  for (let card of cards) {
+    if (card.light == id) return new Card(card)
+  }
+}
+
 const possibilities = {
+
     'four': (card)=>
     {
         return [{'type' : card.color}, {'content': 'four'}, {'content': 'color'}];
@@ -21,7 +32,8 @@ const possibilities = {
     },
     'simple': (card)=>
     {
-        return [{'content': card.content}, {'type': card.type}, {'content': 'four'}, {'content': 'color'}];
+       
+        return [{'content':  card.content}, {'type': card.type}, {'content': 'four'}, {'content': 'color'}];
     },
     'any': (card)=>
     {

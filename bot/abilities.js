@@ -1,3 +1,11 @@
+const cards = require('./uno_cards')
+
+
+const find_card = (id) => {
+  for (let card of cards) {
+    if (card.light == id) return card
+  }
+}
 const abilities = 
 {
     'four': ()=>
@@ -71,18 +79,13 @@ const abilities =
       //   cards.splice(i,1);
       return null;
     },
-    'draw_one': (game, res)=>
+    'draw_one': (game, skip)=>
     {
-      let card = game.get_some_cards(1)[0];
-      if(check_possible(card)) 
-      {
-         res.step = false;
-      }
-      else{
-         game.now_player().cards = game.now_player().cards.concat([card]);
-         res.step = true;
-      }
-      return null;
+       if(!skip)
+       {
+         game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(1));
+       }
+         return null;
     }
 }
 module.exports = abilities;
