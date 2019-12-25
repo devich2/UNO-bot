@@ -1,18 +1,18 @@
-var webSocketsServerPort = process.env.PORT; //process.env.PORT
 const logic = require("./bot/objects");
 const storage = require("./bot/db");
-var webSocketServer = require('websocket').server;
-var http = require('http');
-const cards = require('./bot/uno_cards')
-
-
-const find_card = (id) => {
-  for (let card of cards) {
-    if (card.light == id) return card
-  }
+const errs = {
+  "No game with such an id": "NOT_FOUND_GAME",
+  "Not enough players to start": "NOT_ENOUGH_PLAYERS",
+  'No player with such an id': 'PLAYER_NOT_FOUND',
+  "Not your step": "NOT_YOU",
+  "Put away your card": "NOT_POSSIBLE_CARD"
 }
 
+var http = require('http');
+var webSocketServer = require('websocket').server;
+var webSocketsServerPort = 8080; //process.env.PORT
 var server = http.createServer(function (request, response) {});
+
 server.listen(webSocketsServerPort, '0.0.0.0', function () {
   console.log((new Date()) + " Server is listening on port " +
     webSocketsServerPort);
@@ -20,6 +20,7 @@ server.listen(webSocketsServerPort, '0.0.0.0', function () {
 var wsServer = new webSocketServer({
   httpServer: server
 });
+
 let clients = [];
 let admin_client = null;
 
@@ -44,38 +45,60 @@ async function check_in_game(data) {
 }
 
 async function create_game(data, conn) {
-  let in_game = await check_in_game(data);
+  try{
+    let in_game = await check_in_game(data);
   if (in_game) {
     await add_player(data, conn)
-  } else {
+  } 
+  else {
     let game = new logic.Game({
       id: data.game.id,
       players: [data.game.player]
     });
     storage.save_game(game);
 
-    if (admin_client) admin_client.sendUTF(JSON.stringify({
+    broadcast({
       type: 'GAME_CREATED',
       id: game.id,
       players: game.players
-    }))
+    });
   }
+  }
+  catch(e)
+  {
+    broadcast({
+      type: e.message || e,
+      id: game.id,
+      players: game.players
+    });
+  }
+  
 }
 
 async function add_player(data, conn) {
-  let in_game = await check_in_game(data);
-  if (in_game) {
-    if (admin_client) broadcast(Object.assign(data, {
-      type: 'ALREADY_IN_GAME'
-    }))
-  } else {
-    let content = await storage.load_game(data.game.id);
-    let game = new logic.Game(content);
-    game.add_player(data.game.player);
-    storage.save_game(game);
-    console.log('Game after adding player',game);
-    broadcast(send_game("PLAYER_JOINED", data, game));
+  try{
+    let in_game = await check_in_game(data);
+    if (in_game) {
+     broadcast(Object.assign(data, {
+        type: 'ALREADY_IN_GAME'
+      }));
+    } else {
+      let content = await storage.load_game(data.game.id);
+      let game = new logic.Game(content);
+      game.add_player(data.game.player);
+      storage.save_game(game);
+      console.log('Game after adding player',game);
+      broadcast(send_game("PLAYER_JOINED", data, game));
+    }
   }
+  catch(e)
+  {
+    console.log(e)
+    broadcast(Object.assign(data, {
+      type: e.message || e
+    }));
+  }
+   
 }
 
 function broadcast(data, players) {
@@ -90,73 +113,107 @@ function broadcast(data, players) {
 
 }
 async function delete_player(data, conn) {
-  let content = await storage.load_game(data.game.id);
-  let game = new logic.Game(content);
-  let deleted_player = game.remove_player(data.game.player);
-  storage.delete_game(data.game.id);
-  broadcast(Object.assign(data, {
-    type: "PLAYER_LEFT",
-    left: deleted_player
-  }), game.players);
+  try
+  {
+    console.log('Here');
+    let content = await storage.load_game(data.game.id);
+   let game = new logic.Game(content);
+   let res =  game.check_over();
+   let deleted_player = game.remove_player(data.game.player);
+   console.log('Deleted player', deleted_player)
+   storage.save_game(game);
+  if(game.players.length<=1) 
+  {
+    storage.delete_game(data.game.id);
+    broadcast(Object.assign(data, {
+      type: "GAME_DELETED"
+    }, res));
+  } 
+  else
+  {
+    broadcast(Object.assign(data, {
+      type: "PLAYER_LEFT",
+      left: deleted_player
+    }, res));
+  }
+  
+  }
+  catch(e)
+  {
+    console.log(e)
+    broadcast(Object.assign(data, {
+      type: e.message || e,
+    }));
+  }
 }
 
 async function get_cards(data) {
-  let player_id = data.player.id;
-  console.log('Player_id to get_cards', player_id);
-  let game_content = await storage.load_by_id(player_id);
-  let game = null, cards;
-  if (game_content == [])
-    cards = [];
-  else {
-    console.log('Game content for getting cards:',game_content);;
-    game = new logic.Game(game_content[0] || {});
-    const index = game.players.findIndex(player => player.id == player_id);
-    const now_player = game.now_player()
-    console.log('Now player id', now_player.id)
-    cards = game.players[index].cards;
-    const possible = game.possible_cards;
-    console.log('Possible cards for getting cards:', possible);
-    console.log('Index of player getting cards', index);
-    console.log('Cards of current player to add possible', cards);
-    if (player_id == now_player.id) {
-      cards = cards.map((card) => {
-        if(game.check_possible(card))
-        {
-          return {
-            id: card.light,
-            valid: true
+  try{
+    let player_id = data.player.id;
+    console.log('Player_id to get_cards', player_id);
+    let game_content = await storage.load_by_id(player_id);
+    let game = null, cards;
+    if (game_content == [])
+      cards = [];
+    else {
+      console.log('Game content for getting cards:',game_content);;
+      game = new logic.Game(game_content[0] || {});
+      const index = game.players.findIndex(player => player.id == player_id);
+      if(index == -1) throw new Error('PLAYER_NOT_FOUND')
+      const now_player = game.now_player()
+      console.log('Now player id', now_player.id)
+      cards = game.players[index].cards;
+      const possible = game.possible_cards;
+      console.log('Possible cards for getting cards:', possible);
+      console.log('Index of player getting cards', index);
+      console.log('Cards of current player to add possible', cards);
+      if (player_id == now_player.id) {
+        cards = cards.map((card) => {
+          if(game.check_possible(card))
+          {
+            return {
+              id: card.light,
+              valid: true
+            }
           }
-        }
-        else
-        {
+          else
+          {
+            return {
+              id: card.dark,
+              valid: false
+            };
+          }
+        })
+      }
+      else{
+        cards = cards.map((card) => {
           return {
             id: card.dark,
             valid: false
           };
         }
-      })
-    }
-    else{
-      cards = cards.map((card) => {
-        return {
-          id: card.dark,
-          valid: false
-        };
+        )
       }
-      )
     }
+    console.log('Getting cards', cards);
+    let card_result = cards == [] ? {
+      type: 'NO_CARDS'
+    } : {
+      type: 'GOT_CARDS',
+      cards: cards
+    };
+    broadcast(Object.assign(data, card_result));
   }
-  console.log('Getting cards', cards);
-  let card_result = cards == [] ? {
-    type: 'NO_CARDS'
-  } : {
-    type: 'GOT_CARDS',
-    cards: cards
-  };
-  if (admin_client) admin_client.sendUTF(JSON.stringify(Object.assign(data, card_result)));
+  catch(e)
+  {
+    broadcast(Object.assign(data, {
+      type: e.message || e,
+    }));
+  }
+  
 }
 
-const send_game = (type, data, game) => Object.assign(data, {
+const send_game = (type, data, game , args) => Object.assign(data, {
   type: type,
   game: {
     id: game.id,
@@ -168,7 +225,8 @@ const send_game = (type, data, game) => Object.assign(data, {
       id: game.last_card && (game.last_card.id || game.last_card.light)
     },
     players: game.players
-  }
+  },
+  args
 })
 
 async function start_game(data, conn) {
@@ -183,22 +241,28 @@ async function start_game(data, conn) {
     broadcast(send_game("STARTED_GAME", data, game));
   } catch (e) {
     console.log(e)
-    const errs = {
-      "No game with such an id": "NOT_FOUND_GAME",
-      "Not enough players to start": "NOT_ENOUGH_PLAYERS"
-    }
-    broadcast(send_game(errs[e.message], data, {
+    broadcast(send_game(e.message || e, data, {
       id: data.game.id
     }));
   }
 }
 
 async function call_bluff(data) {
-  let game_content = await storage.load_game(data.game.id);
+  try
+  {
+    let game_content = await storage.load_game(data.game.id);
   let game = new logic.Game(game_content);
-  game.check_honest(true);
+  if (game.now_player().id != data.game.player.id) throw new Error('NOT_YOU');
+  let res = game.check_honest(true);
   storage.save_game(game);
-  broadcast(send_game('CALLED_BLUFF', data, game));
+  broadcast(send_game('CALLED_BLUFF', data, game, res));
+  }
+  catch(e)
+  {
+    broadcast(send_game(e.message || e, data, {
+      id: data.game.id
+    }));
+  }
 }
 
 async function pass(data, skip) {
@@ -207,20 +271,15 @@ async function pass(data, skip) {
     console.log('PASSING');
     console.log(data.game.id);
     let game_content = await storage.load_game(data.game.id);
-    console.log('GAME _CONTENT', game_content)
+    console.log('GAME_CONTENT', game_content)
     let game = new logic.Game(game_content);
-    if (game.now_player().id != data.game.player.id) throw new Error('Not your step"');
-    game.pass(skip);
+    if (game.now_player().id != data.game.player.id) throw new Error('NOT_YOU');
+    game.pass(skip);     
     storage.save_game(game);
     broadcast(send_game(skip ? 'PUT_CARD' : 'PREPARE_PASS', data, game));
   } catch(e) {
     console.log(e);
-    const errs = {
-      "No game with such an id": "NOT_FOUND_GAME",
-      "Not your step": "NOT_YOU",
-    }
-    console.log(e.message);
-    broadcast(send_game(errs[e.message], data, {
+    broadcast(send_game(e.message || e, data, {
       id: data.game.id
     }));
   }
@@ -232,47 +291,60 @@ async function put_card(data) {
     const player_id = data.player.id;
     const game_content = await storage.load_by_id(player_id);
     game = new logic.Game(game_content[0]);
-    if (game.now_player().id != player_id) throw new Error('Not your step');
-    game.put_card(data.card.id);
+    if (game.now_player().id != player_id) throw new Error('NOT_YOU');
+    let res = game.put_card(data.card.id);
     storage.save_game(game);
-    // console.log(game.stringify())
-    broadcast(send_game('PUT_CARD', data, game));
-  } catch (e) {
-    const errs = {
-      "No game with such an id": "NOT_FOUND_GAME",
-      "Not your step": "NOT_YOU",
-      "Put away your card": "NOT_POSSIBLE_CARD"
+    if(res.winner)
+    {
+      broadcast('WINNER', data, game, {winner: res.winner});
     }
-    broadcast(send_game(errs[e.message], data, game));
+    broadcast(send_game(res.change_color ? 'CHANGE_COLOR' : res.can_call_bluff ? 'CAN_CALL_BLUFF' : 'PUT_CARD', data, game, res));
+  } catch (e) {
+    broadcast(send_game(e.message || e, data, game));
   }
 }
 
 async function find_games(data, conn) {
   let games = await storage.find_games(data.username);
-  conn.sendUTF(JSON.stringify({
-    type: 'SET_GAMES',
-    data: games
-  }))
+  let res = games.length>0 ? {data: games} : {}
+  conn.sendUTF(JSON.stringify(Object.assign({
+    type: 'SET_GAMES'}, res)))
 }
 
 async function set_color(data) {
   try {
-    let game_content = await storage.load_game(data.id_creator);
+    let game_content = await storage.load_game(data.game.id);
     let game = new logic.Game(game_content);
-    game.set_color(data.color);
+    if(data.game.player.id != game.now_player().id) throw new Error('NOT_YOU');
+    let res = game.set_color(data.color);
     storage.save_game(game);
-    broadcast(send_game('SET_COLOR', data, game));
+    broadcast(send_game('PUT_CARD', data, game, res));
   } catch (e) {
-    const errs = {
-      "No game with such an id": "NOT_FOUND_GAME",
-    }
-    broadcast(send_game(errs[e.message], data, {
+    broadcast(send_game(e.message || e, data, {
       id: data.game.id
     }));
   }
 
 }
-
+function delete_game(data,conn)
+{
+  try{
+    storage.delete_game(data.game.id);
+    broadcast(send_game('GAME_DELETED'));
+  }
+  catch(e)
+  {
+    broadcast(send_game(e.message || e, data, {
+      id: data.game.id
+    }));
+  }
+}
+async function get_game(data, connection)
+{
+  let game_content = await storage.load_game(data.game.id);
+  let game = new logic.Game(game_content);
+  broadcast(send_game('GAME', data, game));
+}
 wsServer.on('request', function (request) {
   let connection = request.accept(null, null);
   clients.push({
@@ -281,7 +353,6 @@ wsServer.on('request', function (request) {
   connection.on('message', function (message) {
     if (message.type == 'utf8') {
       let data = JSON.parse(message.utf8Data);
-      //console.log(data); {type:'CRARE', hello: world, oweq: , id_player: , }
       switch (data.type) {
         case 'SAVE_CONNECTION':
           if (data.admin) admin_client = connection;
@@ -303,13 +374,13 @@ wsServer.on('request', function (request) {
           put_card(data);
           break;
         case 'CALL_BLUFF':
-          call_bluff(data);          
+          call_bluff(data,connection);          
           break;
         case 'PASS':
           pass(data, true);
           break;
         case 'SET_COLOR':
-          set_color(data);
+          set_color(data,connection);
           break;
         case 'FIND_GAMES':
           find_games(data, connection);
@@ -317,9 +388,16 @@ wsServer.on('request', function (request) {
         case 'GET_CARDS':
           get_cards(data, connection);
           break;
-        case 'GET_ONE_CARD':
+        case 'GET_GAME':
+          get_game(data,connection);
+          break;
+        case 'GET_CARD':
           pass(data, false);
           break;
+        case 'DELETE_GAME':
+         delete_game(data,connection);
+         break;
+        
       }
     }
   });

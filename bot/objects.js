@@ -10,7 +10,7 @@ const find_card = (id) => {
 class Card {
     constructor(dict) {
         // console.log(dict)
-        Object.assign(this, dict)
+        Object.assign(this, {}, dict)
     }
 
     toString() {
@@ -22,7 +22,9 @@ class Card {
     }
     repr() {
         return {
-            id: this.id || this.light
+            id: this.id || this.light,
+            color: this.color || undefined
+            
         }
     }
 }
@@ -51,7 +53,7 @@ class Player {
             id: this.id,
             full_name: this.full_name,
             cards: this.cards ? this.cards.map((card) => card.repr()) : [],
-            username: this.username ? this.username : ''
+            username: this.username ? this.username : '',
         }
     }
 }
@@ -64,6 +66,7 @@ class Game {
         this.id = dict.id
         this.now = dict.now || 0
         this.last_card = dict.last_card ? find_card(dict.last_card.id) : null;
+        if(dict.last_card && dict.last_card.color) this.last_card.color = dict.last_card.color;
         this.used_cards = dict.used_cards ? dict.used_cards.map(card => find_card(card.id)) :[];
         this.cards = dict.cards ? dict.cards.map(card => find_card(card.id)) : [];
         this.possible_cards = dict.possible_cards ? dict.possible_cards.map(card => find_card(card.id)) : [];
@@ -96,14 +99,18 @@ class Game {
     }
 
     add_player(dict) {
-        if (this.players.length > 10) throw new Error('Full room!');
+        if (this.players.length > 10) throw new Error('FULL_ROOM');
         let player = new Player(dict); //check 
         this.players.push(player);
-        return player.repr();
+        if(this.started) this.players.card = this.get_start_cards();
+        return player;
     }
     remove_player(dict) //need delete player cards
     {
         let i = this.players.findIndex(player => player.id == dict.id);
+        if(i == -1) throw new Error('PLAYER_NOT_FOUND');
+         let cards = this.players[i].cards;
+        if(cards.length > 0) this.cards = this.cards.concat(cards);
         this.now--;
         return this.players.splice(i, 1)[0];
     }
@@ -159,9 +166,9 @@ class Game {
         return Math.floor(Math.random() * (max - min + 1)) + min;
     }
     start() {
-        if (this.is_over()) throw new Error('Not enough players to start')
+        if (this.is_over()) throw new Error('NOT_ENOUGH_PLAYERS')
         else if (this.started)
-        {
+        {  
             throw new Error('GAME_ALREADY_STARTED');
         }
         else{
@@ -186,16 +193,17 @@ class Game {
             this.cards.splice(random_int, 1);
             console.log('Cards length', this.cards.length);
             console.log('Last after start_game card', this.last_card);
+            this.started = true;
             return this.end_turn();
         }  
     }
-    add_possible() {
+    add_possible(change_possible) {
         console.log('Added possible');
         this.possible_cards = [];
         const last_card = this.last_card;
          let content = (last_card && last_card.is_special()) ? last_card.content : 'simple';
          console.log('Last card', last_card, 'Content', content)
-        let poss_cards = possibilities[content](last_card);
+        let poss_cards = possibilities[content](last_card,change_possible);
         console.log('Now cards',this.now_player().cards);
         let cards = this.now_player().cards;
         console.log('Cards 0 for adding possible', cards[0]);
@@ -218,10 +226,8 @@ class Game {
     check_winner() {
         let res = {};
         if (this.no_cards()) {
-            let status_exit = this.winner == 1 ? 'finished' : 'winner';
-            res[status_exit] = this.now_player().player.repr();
-            this.remove_player(now_player());
-            this.winner = 1;
+            res['winner'] = this.now_player();
+            this.remove_player(this.now_player());
         }
         return res;
     }
@@ -242,7 +248,7 @@ class Game {
             console.log('Player cards after putting card', this.now_player().cards)
             this.ability = abilities[content](this);
             return this.end_turn();
-        } else throw new Error('Put away your card');
+        } else throw new Error('NOT_POSSIBLE_CARD');
     }
     check_honest(check_honest = false) {
         let result = {};
@@ -253,43 +259,39 @@ class Game {
         return Object.assign({}, result);
     }
     set_color(color) {
+
         this.last_card.color = color;
-        return Object.assign({}, {
-            changed_color: color
-        }, this.end_turn());
+        return Object.assign({}, this.end_turn() , this.last_card.content == 'four' ? {can_call_bluff: true}: {});
     }
-    end_turn(next_step = true)
+    end_turn(next_step = true, change_possible = false)
 
     {
         if ((this.last_card.content == 'four' || this.last_card.content == 'color') && !this.last_card.color) {
             console.log('Not added possible');
-            return {
-                game: this,
+            return Object.assign({
                 change_color: true
-            };
+            }, this.check_over());
         }
         console.log('Here', next_step);
         if (next_step) {
             console.log('Next');
             this.next();
         }
-        this.add_possible();
-        let return_object = Object.assign({}, this.check_over(), this.check_winner(), {
-            game: this
-        });
+        this.add_possible(change_possible);
+        let return_object = Object.assign({}, this.check_over(), this.check_winner());
         return return_object;
     }
     pass(skip) {
         let call = this.ability || abilities['draw_one'];
         this.ability = call(this, skip);
         console.log('CURRENT PLAYER CARDS LENGTH FOR PASS',this.now_player().cards.length)
-        return this.end_turn(skip);
+        return this.end_turn(skip, true);
     }
     is_over() {
         return this.players.length <= 1;
     }
     no_cards() {
-        return this.players[this.now].cards.length == 0;
+        return this.now_player().cards.length == 0;
     }
 }
 exports.Game = Game;

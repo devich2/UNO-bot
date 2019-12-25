@@ -32,7 +32,7 @@ exports.load_by_id = load_games_by_player_id
 const load_game = (game_id) => new Promise((resolve, reject) => {
     // console.log('Searching',game_id);
     client.GET(game_id, function (err, obj) {
-        if (obj == null) reject('No game with such an id')
+        if (obj == null) reject('NOT_FOUND_GAME')
         else {
             console.log('Parsed object', JSON.parse(obj))
             console.log('Gamed object', new logic.Game(JSON.parse(obj)))
@@ -43,11 +43,13 @@ const load_game = (game_id) => new Promise((resolve, reject) => {
 
 exports.load_game = load_game
 
-const delete_game = (game_id) => {
-    client.HKEYS(game_id, function (err, keys) {
-        client.HDEL(game_id, keys, function (err, res) {
-
-        })
+const delete_game = (game_id) => { 
+        client.GET(game_id ,function (err, res) {
+            if(res == null) throw new Error('NOT_FOUND_GAME')
+            else
+            {
+                client.DEL(game_id);
+            }
     })
 }
 exports.delete_game = delete_game;

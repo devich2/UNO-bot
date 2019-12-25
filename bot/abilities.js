@@ -58,7 +58,7 @@ const abilities =
        return (game,res)=>
        {
           game.now_player().cards =  game.now_player().cards.concat(game.get_some_cards(2));
-          game.next();
+         // game.next();
           res.step = true;
           return null;
        }

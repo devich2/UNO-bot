@@ -18,9 +18,9 @@ const possibilities = {
     {
        return [{'content': 'reverse'}, {'type': card.type}];
     },
-    'draw': (card)=>
+    'draw': (card, change_possible)=>
     {
-       return [{'content': card.content}];
+       return [{'content': card.content}, change_possible ? {'type': card.type} : {}];
     },
     'skip': (card)=>
     {
