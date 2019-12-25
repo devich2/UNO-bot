@@ -10,7 +10,7 @@ const errs = {
 
 var http = require('http');
 var webSocketServer = require('websocket').server;
-var webSocketsServerPort = 8080; //process.env.PORT
+var webSocketsServerPort = process.env.PORT; //process.env.PORT
 var server = http.createServer(function (request, response) {});
 
 server.listen(webSocketsServerPort, '0.0.0.0', function () {
