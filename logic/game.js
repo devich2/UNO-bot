@@ -1,68 +1,29 @@
-let card_deck = require("./uno_cards");
-let abilities = require("./abilities")
-let possibilities = require("./possibilities")
-const cards = require('./uno_cards')
+const card_deck = require("./uno_cards");
+const abilities = require("./abilities")
+const possibilities = require("./possibilities")
+const Card = require('./card')
+const Player = require('./player')
+
 const find_card = (id) => {
-  for (let card of cards) {
-    if (card.light == id) return new Card(card)
+    for (let card of card_deck) {
+      if (card.light == id) return new Card(card)
+    }
   }
+const getRandomInt = (min, max)=> {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
 }
-class Card {
-    constructor(dict) {
-        // console.log(dict)
-        Object.assign(this, {}, dict)
-    }
-
-    toString() {
-        return JSON.stringify(this.repr())
-    }
-    is_special() {
-        return this.content == "four" || this.content == "skip" || this.content == "draw" || this.content == "color" ||
-            this.content == "reverse";
-    }
-    repr() {
-        return {
-            id: this.id || this.light,
-            color: this.color || undefined
-            
+const shuffle = (array)=> {
+        for (let i = array.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * i + 1)
+            const temp = array[i]
+            array[i] = array[j]
+            array[j] = temp
         }
+        return array;
     }
-}
-
-exports.Card = Card
-
-class Player {
-    constructor(dict) {
-        this.id = dict.id
-        this.username = dict.username ? dict.username : '';
-        this.full_name = dict.full_name ? dict.full_name : dict.first_name + (dict.last_name ? ' ' + dict.last_name : '')
-        this.cards = dict.cards ? dict.cards.map(card => find_card(card.id)) : [];
-    }
-
-    toString() {
-        return JSON.stringify(this.repr())
-    }
-    remove_card(card) {
-        const i = this.cards.findIndex(
-            c => c.content == card.content && c.type == card.type,
-        );
-        return this.cards.splice(i, 1)[0];
-    }
-    repr() {
-        return {
-            id: this.id,
-            full_name: this.full_name,
-            cards: this.cards ? this.cards.map((card) => card.repr()) : [],
-            username: this.username ? this.username : '',
-        }
-    }
-}
-
-exports.Player = Player
 
 class Game {
     constructor(dict) {
-        console.log('DICT ID',dict.id);
         this.id = dict.id
         this.now = dict.now || 0
         this.last_card = dict.last_card ? find_card(dict.last_card.id) : null;
@@ -125,21 +86,11 @@ class Game {
         }
     }
 
-    shuffle(array) {
-        for (let i = array.length - 1; i > 0; i--) {
-            const j = Math.floor(Math.random() * i + 1)
-            const temp = array[i]
-            array[i] = array[j]
-            array[j] = temp
-        }
-        return array;
-    }
-
     reload_cards() {
-        let card_list = this.shuffle([...this.used_cards]);
+        let card_list = shuffle([...this.used_cards]);
         this.used_cards = [];
         card_list = card_list.concat(this.cards);
-        this.cards = this.shuffle(card_list);
+        this.cards = shuffle(card_list);
     }
 
     get_some_cards(count) {
@@ -148,7 +99,7 @@ class Game {
             this.reload_cards();
         } else if (this.cards.length > count) {
             for (let i = 0; i < count; i++) {
-                some_cards.push(...this.cards.splice(this.getRandomInt(0, this.cards.length - 1), 1))
+                some_cards.push(...this.cards.splice(getRandomInt(0, this.cards.length - 1), 1))
             }
             return some_cards;
         }
@@ -162,9 +113,7 @@ class Game {
     get_start_cards() {
         return this.get_some_cards(7);
     }
-    getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min + 1)) + min;
-    }
+   
     start() {
         if (this.is_over()) throw new Error('NOT_ENOUGH_PLAYERS')
         else if (this.started)
@@ -172,7 +121,7 @@ class Game {
             throw new Error('GAME_ALREADY_STARTED');
         }
         else{
-            this.shuffle(card_deck).forEach((card) => {
+            shuffle(card_deck).forEach((card) => {
                 for (let i = 0; i < card.quantity; i++) {
                     this.cards.push(new Card(card));
                 }
@@ -180,11 +129,11 @@ class Game {
             this.players.forEach(player => {
                 player.cards = this.get_start_cards();
             });
-            this.players = this.shuffle(this.players);
-            this.now = this.getRandomInt(0, this.players.length - 1);
+            this.players = shuffle(this.players);
+            this.now = getRandomInt(0, this.players.length - 1);
             let random_int;
             do {
-                random_int = this.getRandomInt(0, this.cards.length-1) ; //this.getRandomInt(0, this.cards.length - 1);
+                random_int = getRandomInt(0, this.cards.length-1) ; //getRandomInt(0, this.cards.length - 1);
                 this.last_card = this.cards[random_int];
                 console.log('Last card', this.last_card);
                 console.log('Id', this.cards[random_int].id)
@@ -294,4 +243,4 @@ class Game {
         return this.now_player().cards.length == 0;
     }
 }
-exports.Game = Game;
+module.exports.Game = Game;

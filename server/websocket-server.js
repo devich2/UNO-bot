@@ -1,16 +1,9 @@
-const logic = require("./bot/objects");
-const storage = require("./bot/db");
-const errs = {
-  "No game with such an id": "NOT_FOUND_GAME",
-  "Not enough players to start": "NOT_ENOUGH_PLAYERS",
-  'No player with such an id': 'PLAYER_NOT_FOUND',
-  "Not your step": "NOT_YOU",
-  "Put away your card": "NOT_POSSIBLE_CARD"
-}
+const logic = require("../logic/game");
+const storage = require("../logic/db");
 
 var http = require('http');
 var webSocketServer = require('websocket').server;
-var webSocketsServerPort = process.env.PORT; //process.env.PORT
+var webSocketsServerPort = 8080; //process.env.PORT
 var server = http.createServer(function (request, response) {});
 
 server.listen(webSocketsServerPort, '0.0.0.0', function () {
