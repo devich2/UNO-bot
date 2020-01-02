@@ -18,14 +18,13 @@ async function create_game(data, conn) {
         type: 'GAME_CREATED',
         id: game.id,
         players: game.players
-      });
+      }, game.players);
     }
   } catch (e) {
     broadcast.send({
       type: e.message || e,
-      id: game.id,
-      players: game.players
-    });
+      id: data.game.id
+    }, null, conn);
   }
 
 }
@@ -45,7 +44,7 @@ async function add_player(data, conn) {
       game.add_player(data.game.player);
       storage.save_game(game);
       console.log('Game after adding player', game);
-      broadcast.send(send_game("PLAYER_JOINED", data, game));
+      broadcast.send(send_game("PLAYER_JOINED", data, game), game.players);
     }
   } catch (e) {
     console.log(e)
@@ -62,7 +61,6 @@ async function delete_player(data, conn) {
     console.log('Here');
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
-    let res = game.check_over();
     let deleted_player = game.remove_player(data.game.player);
     console.log('Deleted player', deleted_player)
     storage.save_game(game);
@@ -70,12 +68,12 @@ async function delete_player(data, conn) {
       storage.delete_game(data.game.id);
       broadcast.send(Object.assign(data, {
         type: "GAME_DELETED"
-      }, res));
+      }), game.players);
     } else {
       broadcast.send(Object.assign(data, {
         type: "PLAYER_LEFT",
         left: deleted_player
-      }, res));
+      }), game.players);
     }
 
   } catch (e) {
@@ -97,35 +95,45 @@ async function start_game(data, conn) {
     console.log('Game after starting', game.repr())
     // console.log(game.last_card);
     storage.save_game(game);
-    broadcast.send(send_game("STARTED_GAME", data, game));
+    broadcast.send(send_game("STARTED_GAME", data, game), game.players);
   } catch (e) {
-    console.log(e)
     broadcast.send(send_game(e.message || e, data, {
       id: data.game.id
-    }));
+    }), null, conn);
   }
 }
 module.exports.start_game = start_game;
 
 
 async function find_games(data, conn) {
-  let games = await storage.find_games(data.username);
-  let res = games.length > 0 ? {
-    data: games
-  } : {}
-  conn.sendUTF(JSON.stringify(Object.assign({
-    type: 'SET_GAMES'
-  }, res)))
+  try{
+    let games = await storage.find_games(data.username);
+    let res = games.length > 0 ? {
+      data: games
+    } : {}
+    conn.sendUTF(JSON.stringify(Object.assign({
+      type: 'SET_GAMES'
+    }, res)))
+  }
+  catch(e)
+  {
+    conn.sendUTF(send_game(e.message || e, data, {
+      id: data.game.id
+    }));
+  }
+
+
 }
 module.exports.find_games = find_games;
 
 
 function delete_game(data, conn) {
   try {
+    let game = await storage.load_game(data.game.id)
     storage.delete_game(data.game.id);
-    broadcast.send(send_game('GAME_DELETED'));
+    broadcast.send(send_game('GAME_DELETED'), game.players);
   } catch (e) {
-    broadcast.send(send_game(e.message || e, data, {
+    conn.sendUTF(send_game(e.message || e, data, {
       id: data.game.id
     }));
   }
@@ -133,10 +141,17 @@ function delete_game(data, conn) {
 module.exports.delete_game = delete_game;
 
 
-async function get_game(data, connection) {
-  let game_content = await storage.load_game(data.game.id);
-  let game = new logic.Game(game_content);
-  broadcast.send(send_game('GAME', data, game));
+async function get_game(data, conn) {
+  try{
+    let game_content = await storage.load_game(data.game.id);
+    let game = new logic.Game(game_content);
+    conn.sendUTF(JSON.stringify(send_game('GAME', data, game)))
+  }
+  catch (e) {
+    conn.sendUTF(send_game(e.message || e, data, {
+      id: data.game.id
+    }));
+  }
 }
 module.exports.get_game = get_game;
 
@@ -161,7 +176,6 @@ module.exports.send_game = send_game;
 
 
 //#Inner functions(not exported)
-
 async function check_in_game(data) {
   let games = await storage.load_by_id(data.game.player.id);
   return games.length != 0;

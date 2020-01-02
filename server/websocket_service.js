@@ -30,31 +30,49 @@ function del_conn(conn)
 module.exports.del_conn = del_conn;
 
 
-function save_connection(conn) {
+function save_connection(data, conn) {
     for (let i in clients) {
       for (let key in clients[i]) {
         if (clients[i][key] == conn) {
-          clients.splice(i, 1);
-          let client = {};
-          client[data.id] = conn;
-          clients.push(client);
+          clients[i].renameProperty(key,data.id)
         }
       }
     }
   }
-  module.exports.save_connection = save_connection;
+  module.exports.save_conn = save_connection;
 
 
-  function broadcast(data, players) {
-    clients.forEach(client => {
-      for (let key in client) {
-        if (players && players.findIndex(player => player.id == key) != -1) {
-          client[key].sendUTF(JSON.stringify(data));
+  function broadcast(data, players, conn = null) {
+    if(players)
+    {
+      clients.forEach(client => {
+        for (let key in client) {
+          if (players.findIndex(player => player.id == key) != -1) {
+            client[key].sendUTF(JSON.stringify(data));
+          }
         }
-      }
-    })
-    if (admin_client) admin_client.sendUTF(JSON.stringify(data)); 
+      })
+    }
+    else if (conn)
+    {
+      conn.sendUTF(JSON.stringify(data)); 
+    }
+    if (admin_client && admin_client != conn) admin_client.sendUTF(JSON.stringify(data)); 
   }
   module.exports.send = broadcast;
+
+
+  Object.prototype.renameProperty = function (oldName, newName) {
+    // Do nothing if the names are the same
+    if (oldName === newName) {
+        return this;
+    }
+   // Check for the old property name to avoid a ReferenceError in strict mode.
+   if (this.hasOwnProperty(oldName)) {
+       this[newName] = this[oldName];
+       delete this[oldName];
+   }
+   return this;
+};
 
   

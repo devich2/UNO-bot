@@ -15,12 +15,13 @@ const wsServer = new webSocketServer({
 
 wsServer.on('request', function (request) {
   let connection = request.accept(null, null)
-  handlers['PUSH'](connection)
+  handlers['PUSH_CONNECTION'](connection)
 
   connection.on('message', function (message) {
     if (message.type == 'utf8') {
       let data = JSON.parse(message.utf8Data)
       handlers[data.type](data,connection)
+      
     }
   })
   connection.on('close', function (code) {

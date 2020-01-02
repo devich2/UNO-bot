@@ -64,13 +64,13 @@ class Game {
         let player = new Player(dict); //check 
         this.players.push(player);
         if(this.started) this.players.card = this.get_start_cards();
-        return player;
     }
+
     remove_player(dict) //need delete player cards
     {
-        let i = this.players.findIndex(player => player.id == dict.id);
-        if(i == -1) throw new Error('PLAYER_NOT_FOUND');
-         let cards = this.players[i].cards;
+        let index = this.players.findIndex(player => player.id == dict.id);
+        if(index == -1) throw new Error('PLAYER_NOT_FOUND');
+        let cards = this.players[index].cards;
         if(cards.length > 0) this.cards = this.cards.concat(cards);
         this.now--;
         return this.players.splice(i, 1)[0];
@@ -138,7 +138,7 @@ class Game {
                 console.log('Last card', this.last_card);
                 console.log('Id', this.cards[random_int].id)
             }
-            while (this.last_card == undefined || (this.last_card == undefined && this.last_card.is_special()));
+            while (this.last_card.is_special());
             this.cards.splice(random_int, 1);
             console.log('Cards length', this.cards.length);
             console.log('Last after start_game card', this.last_card);
@@ -150,15 +150,14 @@ class Game {
         console.log('Added possible');
         this.possible_cards = [];
         const last_card = this.last_card;
-         let content = (last_card && last_card.is_special()) ? last_card.content : 'simple';
-         console.log('Last card', last_card, 'Content', content)
+        let content = (last_card && last_card.is_special()) ? last_card.content : 'simple';
+        console.log('Last card', last_card, 'Content', content)
         let poss_cards = possibilities[content](last_card,change_possible);
         console.log('Now cards',this.now_player().cards);
         let cards = this.now_player().cards;
         console.log('Cards 0 for adding possible', cards[0]);
         outer: for (let card of cards) {
             inner: for (let poss in poss_cards) {
-                let pos = true;
                 for (let key in poss_cards[poss]) {
                     if (card[key] != poss_cards[poss][key]) continue inner;
                 }
@@ -180,13 +179,6 @@ class Game {
         }
         return res;
     }
-    check_over() {
-        let res = {};
-        if (this.is_over()) {
-            res.loser = this.players[0].repr();
-        }
-        return res;
-    }
     put_card(id) {
         let card = find_card(id);
         console.log('Put card:', card);
@@ -199,36 +191,39 @@ class Game {
             return this.end_turn();
         } else throw new Error('NOT_POSSIBLE_CARD');
     }
-    check_honest(check_honest = false) {
+    check_honest() {
         let result = {};
         console.log(this.ability);
-        this.ability = this.ability(this, check_honest, result);
-        this.end_turn(result.bluffed == true ? false : true);
-        console.log('Hm', !result.bluffed);
-        return Object.assign({}, result);
+        this.ability = this.ability(this,result);
+        this.end_turn(!result.bluffed);
+        return result;
     }
     set_color(color) {
 
         this.last_card.color = color;
-        return Object.assign({}, this.end_turn() , this.last_card.content == 'four' ? {can_call_bluff: true}: {});
+        return Object.assign(this.end_turn() , this.last_card.content == 'four' ? { can_call_bluff: true }: {});
     }
     end_turn(next_step = true, change_possible = false)
-
     {
-        if ((this.last_card.content == 'four' || this.last_card.content == 'color') && !this.last_card.color) {
+        console.log(this.last_card);
+        if (this.last_card.is_choosing_color() && !this.last_card.color) {
             console.log('Not added possible');
             return Object.assign({
                 change_color: true
-            }, this.check_over());
+            });
         }
         console.log('Here', next_step);
-        if (next_step) {
-            console.log('Next');
-            this.next();
+        let res = Object.assign({over : this.is_over()}, this.check_winner());
+        if(res.over){}
+        else
+        {
+            if (next_step) {
+                console.log('Next');
+                this.next();
+            }
+            this.add_possible(change_possible);
         }
-        this.add_possible(change_possible);
-        let return_object = Object.assign({}, this.check_over(), this.check_winner());
-        return return_object;
+        return res;
     }
     pass(skip) {
         let call = this.ability || abilities['draw_one'];

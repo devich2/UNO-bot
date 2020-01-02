@@ -19,6 +19,11 @@ class Card {
             
         }
     }
+
+    is_choosing_color()
+    {
+        return this.content == 'four' || this.content == 'color';
+    }
 }
 
 module.exports = Card

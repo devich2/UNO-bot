@@ -1,7 +1,2 @@
-const s = {del : ()=>console.log(f())}
-module.exports = s;
-
-function f()
-{
-    console.log(b);
-}
+let s = 3==3;
+console.log(s? 'nice':'bad')

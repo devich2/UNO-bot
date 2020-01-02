@@ -29,15 +29,17 @@ const handlers =
     'DELETE_PLAYER': (data, conn)=> game_service.delete_player(data, conn)
     ,
 
-    'PUT_CARD': (data, conn)=> cards_service.put_card(data)
+    'CALL_BLUFF': (data, conn)=> cards_service.call_bluff(data,conn)
     ,
-    'PASS': (data, conn)=> cards_service.call_bluff(data,conn) 
+    'PUT_CARD': (data, conn)=> cards_service.put_card(data,conn)
+    ,
+    'PASS': (data, conn)=> cards_service.pass(data,true,conn) 
     ,
     'SET_COLOR': (data, conn)=> cards_service.set_color(data,conn)
     ,
-    'GET_CARDS': (data, conn)=> cards_service.get_cards(data, conn)
+    'GET_CARDS': (data, conn)=> cards_service.get_cards(data,conn)
     ,
-    'GET_CARD': (data, conn)=> cards_service.pass(data, false)
+    'GET_CARD': (data, conn)=> cards_service.pass(data, false, conn)
     ,
 
 }

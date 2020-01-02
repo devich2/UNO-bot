@@ -1,33 +1,25 @@
 const abilities = {
    'four': () => {
-      return (game, honest_check = false, result) => {
-         if (honest_check) {
-            let prev;
-            let turn = game.now - game.turn
-            if (turn < 0) {
-               prev = game.players.length + turn
-            } else if (turn >= game.players.length) {
-               prev = turn - game.players.length
-            } else {
-               prev = turn
-            }
-            console.log(game.now, prev);
-            console.log('Checking honst:', game.players[prev]);
-            for (let card of game.players[prev].cards) {
-               console.log('His', card.type, 'Color', game.last_card.color);
-               if (card.type == game.last_card.color) {
-                  game.players[prev].cards = game.players[prev].cards.concat(game.get_some_cards(4));
-                  result.bluffed = true;
-                  console.log("Trued");
-                  return null;
-               }
-            }
-            game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(6));
-            result.bluffed = false;
+      return (game, result) => {
+         let prev;
+         let turn = game.now - game.turn
+         if (turn < 0) {
+            prev = game.players.length + turn
+         } else if (turn >= game.players.length) {
+            prev = turn - game.players.length
          } else {
-            game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(4));
-            result.check_honest = false;
+            prev = turn
          }
+         result.prev_player = game.players[prev_player]
+         for (let card of game.players[prev].cards) {
+            if (card.type == game.last_card.color) {
+               game.players[prev].cards = game.players[prev].cards.concat(game.get_some_cards(4));
+               result.bluffed = true;
+               return null;
+            }
+         }
+         game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(6));
+         result.bluffed = false;
          return null;
       }
    },
@@ -37,10 +29,9 @@ const abilities = {
       return null;
    },
    'draw': () => {
-      return (game, res) => {
+      return (game) => {
          game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(2));
-         // game.next();
-         res.step = true;
+         game.next();
          return null;
       }
    },
