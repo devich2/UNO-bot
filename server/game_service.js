@@ -18,13 +18,13 @@ async function create_game(data, conn) {
         type: 'GAME_CREATED',
         id: game.id,
         players: game.players
-      }, game.players);
+      });
     }
   } catch (e) {
     broadcast.send({
       type: e.message || e,
       id: data.game.id
-    }, null, conn);
+    });
   }
 
 }
@@ -35,7 +35,7 @@ async function add_player(data, conn) {
   try {
     let in_game = await check_in_game(data);
     if (in_game) {
-      broadcast.send(Object.assign(data, {
+      conn.sendUTF(Object.assign(data, {
         type: 'ALREADY_IN_GAME'
       }));
     } else {
@@ -48,7 +48,7 @@ async function add_player(data, conn) {
     }
   } catch (e) {
     console.log(e)
-    broadcast.send(Object.assign(data, {
+    conn.sendUTF(Object.assign(data, {
       type: e.message || e
     }));
   }
@@ -78,7 +78,7 @@ async function delete_player(data, conn) {
 
   } catch (e) {
     console.log(e)
-    broadcast.send(Object.assign(data, {
+    conn.sendUTF(Object.assign(data, {
       type: e.message || e,
     }));
   }
@@ -99,7 +99,7 @@ async function start_game(data, conn) {
   } catch (e) {
     broadcast.send(send_game(e.message || e, data, {
       id: data.game.id
-    }), null, conn);
+    }));
   }
 }
 module.exports.start_game = start_game;

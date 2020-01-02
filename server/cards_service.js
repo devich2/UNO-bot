@@ -55,7 +55,7 @@ async function get_cards(data, conn) {
         };
         conn.sendUTF(JSON.stringify(Object.assign(data, card_result)));
     } catch (e) {
-        broadcast.send(Object.assign(data, {
+        conn.sendUTF(Object.assign(data, {
             type: e.message || e,
         }));
     }
@@ -73,7 +73,7 @@ async function call_bluff(data) {
         storage.save_game(game);
         broadcast.send(send_game('CALLED_BLUFF', data, game, res), game.players);
     } catch (e) {
-        broadcast.send(send_game(e.message || e, data, {
+        conn.sendUTF(send_game(e.message || e, data, {
             id: data.game.id
         }));
     }
@@ -95,7 +95,7 @@ async function pass(data, skip, conn) {
         broadcast.send(send_game(skip ? 'PUT_CARD' : 'PREPARE_PASS', data, game), skip ? game.players : null, skip ? null : conn);
     } catch (e) {
         console.log(e);
-        broadcast.send(send_game(e.message || e, data, {
+        conn.sendUTF(send_game(e.message || e, data, {
             id: data.game.id
         }));
     }
@@ -123,17 +123,17 @@ async function put_card(data, conn) {
         else 
         {
             let type = res.change_color ? 'CHANGE_COLOR' : res.can_call_bluff ? 'CAN_CALL_BLUFF' : 'PUT_CARD'
-            let multicast = type == 'PUT_CARD' ? true : false
+            let multicast = type == 'PUT_CARD'
             broadcast.send(send_game(type, data, game, res), multicast ? game.players : null, multicast ? null : conn)
         }
     } catch (e) {
-        broadcast.send(send_game(e.message || e, data, game));
+       conn.sendUTF(send_game(e.message || e, data, game));
     }
 }
 module.exports.put_card = put_card;
 
 
-async function set_color(data) {
+async function set_color(data,conn) {
     try {
         let game_content = await storage.load_game(data.game.id);
         let game = new logic.Game(game_content);
@@ -142,7 +142,7 @@ async function set_color(data) {
         storage.save_game(game);
         broadcast.send(send_game('PUT_CARD', data, game, res), game.players);
     } catch (e) {
-        broadcast.send(send_game(e.message || e, data, {
+        conn.sendUTF(send_game(e.message || e, data, {
             id: data.game.id
         }));
     }
