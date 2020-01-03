@@ -1,0 +1,44 @@
+#players{
+    width: 20%;
+    height: 70%;
+    display: inline-block;
+    outline: 1px black solid;
+    vertical-align: top;
+    overflow: hidden;
+}
+
+#player{
+    outline: 1px black solid;
+    width: 100%;
+    height: 25%;
+}
+
+#playerName{
+    width: 100%;
+    overflow: hidden;
+}
+
+#player0{
+    width: 200px;
+    height: 25%;
+}
+
+#player1{
+    width: 200px;
+    height: 25%;
+}
+
+#player2{
+    width: 200px;
+    height: 25%;
+}
+
+#player3{
+    width: 200px;
+    height: 25%;
+}
+
+#player4{
+    width: 200px;
+    height: 25%;
+}

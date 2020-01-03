@@ -1,0 +1,10 @@
+#join{
+    margin-top: 100px;
+    margin-right: auto;
+    margin-left: auto;
+    width: 350px;
+    height: 300px;
+    text-align: center;
+    outline: black 1px solid;
+    background: dimgray;
+}
