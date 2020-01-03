@@ -24,6 +24,7 @@ function del_conn(conn)
   {
     for (let i in clients) {
       for (let key in clients[i]) {
+        console.log('Key', key);
         if (clients[i][key] == conn) {
           clients.splice(i, 1)
         }
@@ -35,10 +36,11 @@ module.exports.del_conn = del_conn;
 
 
 function save_connection(data, conn) {
+  console.log(clients.length);
     for (let i in clients) {
       for (let key in clients[i]) {
         if (clients[i][key] == conn) {
-          clients[i].renameProperty(key,data.id)
+          renameProperty(clients[i],key,data.id)
         }
       }
     }
@@ -65,18 +67,13 @@ function save_connection(data, conn) {
   }
   module.exports.send = broadcast;
 
-
-  Object.prototype.renameProperty = function (oldName, newName) {
-    // Do nothing if the names are the same
-    if (oldName === newName) {
-        return this;
-    }
-   // Check for the old property name to avoid a ReferenceError in strict mode.
-   if (this.hasOwnProperty(oldName)) {
-       this[newName] = this[oldName];
-       delete this[oldName];
-   }
-   return this;
-};
+function renameProperty(o, old_key, new_key)
+{
+  if (old_key !== new_key) {
+    Object.defineProperty(o, new_key,
+        Object.getOwnPropertyDescriptor(o, old_key));
+    delete o[old_key];
+}
+}
 
   

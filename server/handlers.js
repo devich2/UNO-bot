@@ -28,6 +28,9 @@ const handlers =
     //#Admin handler - currently not used
     'DELETE_GAME': (data, conn)=> game_service.delete_game(data,conn)
     ,
+    //#
+    'CONTINUE_GAME': (data,conn)=> game_service.continue_game(data,conn)
+    ,
     /*#Handler for finding games, passed parameter - letter/word (username of creator)
     Example: parameter : dev => games, whose username of creator starts with "dev" : [devich2,devich,devsd,dev,dev**,developer]
     Mainly for FRONT

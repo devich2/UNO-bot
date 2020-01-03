@@ -20,11 +20,13 @@ wsServer.on('request', function (request) {
   connection.on('message', function (message) {
     if (message.type == 'utf8') {
       let data = JSON.parse(message.utf8Data)
+      console.log(data);
       handlers[data.type](data,connection)
       
     }
   })
   connection.on('close', function (code) {
     handlers['DELETE_CONNECTION'](connection)
+    console.log(connection)
   })
 })
