@@ -19,13 +19,17 @@ module.exports.push_conn = push_conn;
 
 function del_conn(conn)
 {
+  if(conn == admin_client) admin_client = null
+  else
+  {
     for (let i in clients) {
-        for (let key in clients[i]) {
-          if (clients[i][key] == conn) {
-            clients.splice(i, 1)
-          }
+      for (let key in clients[i]) {
+        if (clients[i][key] == conn) {
+          clients.splice(i, 1)
         }
       }
+    }
+  }
 }
 module.exports.del_conn = del_conn;
 

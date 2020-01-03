@@ -18,11 +18,20 @@ class Player {
         return JSON.stringify(this.repr())
     }
 
-    remove_card(card) {
-        const index = this.cards.findIndex(c => c.content == card.content && c.type == card.type);
-        return this.cards.splice(i, 1)[0];
-    }
+    has_card(card) {
+        if (!card) return false;
+    
+        return this.cards.some(
+          c => c.type === card.type && c.content === card.content
+        );
+      }
 
+    remove_card(card) {
+        if (!this.has_card(card)) return;
+        const index = this.cards.findIndex(c => c.content == card.content && c.type == card.type);
+        return this.cards.splice(index, 1)[0];
+    }
+    
     repr() {
         return {
             id: this.id,

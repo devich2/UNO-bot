@@ -13,7 +13,7 @@ module.exports.save_game = save_game
 
 const load_games_by_player_id = async(player_id) => 
 {
-  console.log(typeof(player_id));
+  console.log(player_id);
   let keys = await get_keys('*');
     return Promise.all(
         keys.map(load_game)).then(games=> games.filter(game=>game.players.findIndex(player=>player.id == player_id)!=-1));
@@ -33,13 +33,11 @@ const delete_game = async(game_id) => {
 module.exports.delete_game = delete_game;
 
 
-const find_games = async game_id => 
+const find_games = async username => 
 {
-    let keys = await get_keys('*');
+   let keys = await get_keys('*');
    return  Promise.all(
-         keys.filter(key => key.startsWith(game_id))
-        .map(load_game)
-);
+         keys.map(load_game)).then(games=> games.filter(game=>game.creator.startsWith(username)));
 }
 module.exports.find_games = find_games;
 

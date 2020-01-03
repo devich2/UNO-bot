@@ -4,12 +4,16 @@ const broadcast = require("./websocket_service")
 
 async function create_game(data, conn) {
   try {
-    let in_game = await check_in_game(data);
+    let in_game = await check_in_game(data), game;
     if (in_game) {
-      await add_player(data, conn)
+      game = new logic.Game(in_game)
+      conn.sendUTF(JSON.stringify(Object.assign(data, {
+        type: 'ALREADY_IN_GAME'
+      }, game)))
     } else {
-      let game = new logic.Game({
+        game = new logic.Game({
         id: data.game.id,
+        creator: data.game.player.username,
         players: [data.game.player]
       });
       storage.save_game(game);
@@ -33,14 +37,16 @@ module.exports.create_game = create_game;
 
 async function add_player(data, conn) {
   try {
-    let in_game = await check_in_game(data);
+    let in_game = await check_in_game(data), content, game;
     if (in_game) {
-      conn.sendUTF(Object.assign(data, {
+      console.log('IN GAME')
+      game = new logic.Game(in_game)
+      conn.sendUTF(JSON.stringify(Object.assign(data, {
         type: 'ALREADY_IN_GAME'
-      }));
+      }, game)));
     } else {
-      let content = await storage.load_game(data.game.id);
-      let game = new logic.Game(content);
+     content = await storage.load_game(data.game.id);
+     game = new logic.Game(content);
       game.add_player(data.game.player);
       storage.save_game(game);
       console.log('Game after adding player', game);
@@ -48,9 +54,9 @@ async function add_player(data, conn) {
     }
   } catch (e) {
     console.log(e)
-    conn.sendUTF(Object.assign(data, {
+    conn.sendUTF(JSON.stringify(Object.assign(data, {
       type: e.message || e
-    }));
+    })));
   }
 }
 module.exports.add_player = add_player;
@@ -78,9 +84,9 @@ async function delete_player(data, conn) {
 
   } catch (e) {
     console.log(e)
-    conn.sendUTF(Object.assign(data, {
+    conn.sendUTF(JSON.stringify(Object.assign(data, {
       type: e.message || e,
-    }));
+    })));
   }
 }
 module.exports.delete_player = delete_player;
@@ -97,9 +103,9 @@ async function start_game(data, conn) {
     storage.save_game(game);
     broadcast.send(send_game("STARTED_GAME", data, game), game.players);
   } catch (e) {
-    broadcast.send(send_game(e.message || e, data, {
+    conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
       id: data.game.id
-    }));
+    })));
   }
 }
 module.exports.start_game = start_game;
@@ -107,35 +113,53 @@ module.exports.start_game = start_game;
 
 async function find_games(data, conn) {
   try{
-    let games = await storage.find_games(data.username);
+    let games = await storage.find_games(data.player.username);
     let res = games.length > 0 ? {
       data: games
     } : {}
     conn.sendUTF(JSON.stringify(Object.assign({
-      type: 'SET_GAMES'
+      type: 'SET_AVAILABLE_GAMES'
     }, res)))
   }
   catch(e)
   {
-    conn.sendUTF(send_game(e.message || e, data, {
+    conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
       id: data.game.id
-    }));
+    })));
   }
-
-
 }
-module.exports.find_games = find_games;
+module.exports.find_available_games = find_games;
 
 
-function delete_game(data, conn) {
+async function find_joined_games(data, conn) {
+  try{
+    let games = await storage.load_by_id(data.player.id);
+    let res = games.length > 0 ? {
+      data: games
+    } : {}
+    conn.sendUTF(JSON.stringify(Object.assign({
+      type: 'SET_JOINED_GAMES'
+    }, res)))
+  }
+  catch(e)
+  {
+    conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
+      id: data.game.id
+    })));
+  }
+}
+module.exports.find_joined_games = find_joined_games;
+
+
+async function delete_game(data, conn) {
   try {
     let game = await storage.load_game(data.game.id)
     storage.delete_game(data.game.id);
     broadcast.send(send_game('GAME_DELETED'), game.players);
   } catch (e) {
-    conn.sendUTF(send_game(e.message || e, data, {
+    conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
       id: data.game.id
-    }));
+    })));
   }
 }
 module.exports.delete_game = delete_game;
@@ -148,9 +172,9 @@ async function get_game(data, conn) {
     conn.sendUTF(JSON.stringify(send_game('GAME', data, game)))
   }
   catch (e) {
-    conn.sendUTF(send_game(e.message || e, data, {
+    conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
       id: data.game.id
-    }));
+    })));
   }
 }
 module.exports.get_game = get_game;
@@ -178,5 +202,6 @@ module.exports.send_game = send_game;
 //#Inner functions(not exported)
 async function check_in_game(data) {
   let games = await storage.load_by_id(data.game.player.id);
-  return games.length != 0;
+  let index = games.findIndex(game=> game.id == data.game.id)
+  return index!=-1 ? games[index] : null;
 }

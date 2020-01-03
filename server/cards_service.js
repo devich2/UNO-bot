@@ -55,9 +55,9 @@ async function get_cards(data, conn) {
         };
         conn.sendUTF(JSON.stringify(Object.assign(data, card_result)));
     } catch (e) {
-        conn.sendUTF(Object.assign(data, {
+        conn.sendUTF(JSON.stringify(Object.assign(data, {
             type: e.message || e,
-        }));
+        })));
     }
 
 }
@@ -73,9 +73,9 @@ async function call_bluff(data) {
         storage.save_game(game);
         broadcast.send(send_game('CALLED_BLUFF', data, game, res), game.players);
     } catch (e) {
-        conn.sendUTF(send_game(e.message || e, data, {
+        conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
             id: data.game.id
-        }));
+        })));
     }
 }
 module.exports.call_bluff = call_bluff;
@@ -95,9 +95,9 @@ async function pass(data, skip, conn) {
         broadcast.send(send_game(skip ? 'PUT_CARD' : 'PREPARE_PASS', data, game), skip ? game.players : null, skip ? null : conn);
     } catch (e) {
         console.log(e);
-        conn.sendUTF(send_game(e.message || e, data, {
+        conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
             id: data.game.id
-        }));
+        })));
     }
 }
 module.exports.pass = pass;
@@ -127,7 +127,7 @@ async function put_card(data, conn) {
             broadcast.send(send_game(type, data, game, res), multicast ? game.players : null, multicast ? null : conn)
         }
     } catch (e) {
-       conn.sendUTF(send_game(e.message || e, data, game));
+       conn.sendUTF(JSON.stringify(send_game(e.message || e, data, game)));
     }
 }
 module.exports.put_card = put_card;
@@ -142,9 +142,9 @@ async function set_color(data,conn) {
         storage.save_game(game);
         broadcast.send(send_game('PUT_CARD', data, game, res), game.players);
     } catch (e) {
-        conn.sendUTF(send_game(e.message || e, data, {
+        conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
             id: data.game.id
-        }));
+        })));
     }
 
 }
@@ -153,7 +153,23 @@ module.exports.set_color = set_color;
 
 
 //#Inner functions(not exported)
+const send_game = (type, data, game, args = {}) => Object.assign(data, {
+    type: type,
+    game: {
+      id: game.id,
+      now: {
+        id: game.now,
+        possible_cards: game.possible_cards
+      },
+      last_card: {
+        id: game.last_card && (game.last_card.id || game.last_card.light)
+      },
+      players: game.players
+    },
+    args
+  })
 
+  
 async function check_in_game(data) {
     let games = await storage.load_by_id(data.game.player.id);
     return games.length != 0;

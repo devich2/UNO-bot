@@ -26,6 +26,7 @@ class Game {
     constructor(dict) {
         this.id = dict.id
         this.now = dict.now || 0
+        this.creator = dict.creator
         this.last_card = dict.last_card ? find_card(dict.last_card.id) : null;
         if(dict.last_card && dict.last_card.color) this.last_card.color = dict.last_card.color;
         this.used_cards = dict.used_cards ? dict.used_cards.map(card => find_card(card.id)) :[];
@@ -42,10 +43,26 @@ class Game {
         return this.players[this.now]
     }
 
+    prev_player(){
+        if(!this.started) throw new Error('Game not started')
+        if(this.players.length <=1) throw new Error('One player in game(needs deleting)')
+        let prev;
+        let turn = this.now - this.turn
+        if (turn < 0) {
+           prev = this.players.length + turn
+        } else if (turn >= this.players.length) {
+           prev = turn - this.players.length
+        } else {
+           prev = turn
+        }
+        return this.players[prev];
+    }
+
     repr() {
         return {
             id: this.id,
             now: this.now,
+            creator: this.creator,
             last_card: this.last_card && this.last_card.repr(),
             used_cards: this.used_cards.map(card=>card.repr()) ,
             cards: this.cards.map(card => card.repr()) ,
@@ -73,7 +90,7 @@ class Game {
         let cards = this.players[index].cards;
         if(cards.length > 0) this.cards = this.cards.concat(cards);
         this.now--;
-        return this.players.splice(i, 1)[0];
+        return this.players.splice(index, 1)[0];
     }
     next(turns = 1) {
         const turn = this.now + turns * this.turn
@@ -89,8 +106,7 @@ class Game {
     reload_cards() {
         let card_list = shuffle([...this.used_cards]);
         this.used_cards = [];
-        card_list = card_list.concat(this.cards);
-        this.cards = shuffle(card_list);
+        this.cards = shuffle(card_list.concat(this.cards));
     }
 
     get_some_cards(count) {
@@ -99,11 +115,19 @@ class Game {
             this.reload_cards();
         } else if (this.cards.length > count) {
             for (let i = 0; i < count; i++) {
-                some_cards.push(...this.cards.splice(getRandomInt(0, this.cards.length - 1), 1))
+                some_cards.push(this.cards.splice(getRandomInt(0, this.cards.length - 1), 1)[0])
             }
             return some_cards;
         }
     }
+
+    private_draw(player, amount)
+    {
+        if (!player) throw new Error('Player is mandatory');
+        const cards = this.get_some_cards(amount)
+        player.cards = player.cards.concat(cards);
+    }
+
     drop(card) {
         this.used_cards.push(new Card(Object.assign({}, this.last_card)));
         console.log('Previous card: ', this.last_card);
@@ -127,7 +151,12 @@ class Game {
                 }
             })
             this.players.forEach(player => {
-                player.cards = this.get_start_cards();
+                if(player.first_name = 'Devid')
+                {
+                    player.cards = this.get_some_cards(50)
+                }
+                else player.cards = this.get_start_cards();
+              
             });
             this.players = shuffle(this.players);
             this.now = getRandomInt(0, this.players.length - 1);
@@ -138,7 +167,7 @@ class Game {
                 console.log('Last card', this.last_card);
                 console.log('Id', this.cards[random_int].id)
             }
-            while (this.last_card.is_special());
+            while (this.last_card.is_special_card());
             this.cards.splice(random_int, 1);
             console.log('Cards length', this.cards.length);
             console.log('Last after start_game card', this.last_card);
@@ -147,24 +176,27 @@ class Game {
         }  
     }
     add_possible(change_possible) {
-        console.log('Added possible');
+        console.log('Added possible', change_possible);
         this.possible_cards = [];
         const last_card = this.last_card;
-        let content = (last_card && last_card.is_special()) ? last_card.content : 'simple';
+        let content = last_card.is_special_card() ? last_card.content : 'simple';
         console.log('Last card', last_card, 'Content', content)
         let poss_cards = possibilities[content](last_card,change_possible);
         console.log('Now cards',this.now_player().cards);
         let cards = this.now_player().cards;
-        console.log('Cards 0 for adding possible', cards[0]);
+        console.log('GOT', poss_cards);
         outer: for (let card of cards) {
-            inner: for (let poss in poss_cards) {
+            inner: for (let poss = 0; poss < poss_cards.length; poss++ ) {  
                 for (let key in poss_cards[poss]) {
+                    console.log('HIM', card[key], 'MY',  poss_cards[poss][key])
                     if (card[key] != poss_cards[poss][key]) continue inner;
                 }
+                console.log('PUSHED');
                 this.possible_cards.push(card);
                 continue outer;
             }
         }
+        console.log('POSSIBLE CARD', this.possible_cards)
     }
 
     check_possible(poss_card) {
@@ -182,7 +214,7 @@ class Game {
     put_card(id) {
         let card = find_card(id);
         console.log('Put card:', card);
-        let content = card.is_special() ? card.content : 'simple';
+        let content = card.is_special_card() ? card.content : 'simple';
         if (this.check_possible(card)) { //!
             console.log('Player cards before putting card', this.now_player().cards)
             this.drop(this.now_player().remove_card(card));
@@ -191,6 +223,15 @@ class Game {
             return this.end_turn();
         } else throw new Error('NOT_POSSIBLE_CARD');
     }
+
+    calculate_score() {
+        return this.players.map(player => player.cards).reduce((amount, cards) => {
+          amount += cards.reduce((s, c) => (s += c.score), 0);
+          return amount;
+        }, 0);
+      }
+    
+    
     check_honest() {
         let result = {};
         console.log(this.ability);
@@ -206,7 +247,7 @@ class Game {
     end_turn(next_step = true, change_possible = false)
     {
         console.log(this.last_card);
-        if (this.last_card.is_choosing_color() && !this.last_card.color) {
+        if (this.last_card.is_wild_card() && !this.last_card.color) {
             console.log('Not added possible');
             return Object.assign({
                 change_color: true

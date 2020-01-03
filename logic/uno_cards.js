@@ -1,11 +1,11 @@
 const cards = [
-    // {
-    //     type: 'draw',
-    //     content: 'four',
-    //     light: 'CAADAgADiQMAAk9wUEg1fzyY8FgCZgI',
-    //     dark: 'CAADAgADtAMAAk9wUEiEDCzN-ZufxAI',
-    //     quantity: 4
-    // },
+    {
+        type: 'draw',
+        content: 'four',
+        light: 'CAADAgADiQMAAk9wUEg1fzyY8FgCZgI',
+        dark: 'CAADAgADtAMAAk9wUEiEDCzN-ZufxAI',
+        quantity: 4
+    },
     {
         type: 'choose',
         content: 'color',

@@ -1,7 +1,7 @@
 const http = require('http')
 const webSocketServer = require('websocket').server
 const handlers = require('./handlers')
-const webSocketsServerPort = 8080 //process.env.PORT
+const webSocketsServerPort = process.env.PORT //process.env.PORT
 const server = http.createServer()
 
 server.listen(webSocketsServerPort, '0.0.0.0', function () {

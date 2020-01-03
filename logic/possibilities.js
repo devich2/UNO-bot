@@ -4,7 +4,7 @@ const possibilities = {
     {
         return [{'type' : card.color}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
     },
-    'reverse': (card)=>
+    'reverse': (card, change)=>
     {
        return [{'content': 'reverse'}, {'type': card.type}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
     },
@@ -12,7 +12,7 @@ const possibilities = {
     {
        return [{'content': card.content}].concat(change ? [{'type': card.type}, {'content': 'four'}, {'content': 'color'}] : []);
     },
-    'skip': (card)=>
+    'skip': (card, change)=>
     {
        return [{'content': card.content}, {'type': card.type}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
     },

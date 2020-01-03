@@ -22,7 +22,9 @@ const handlers =
     ,
     'DELETE_GAME': (data, conn)=> game_service.delete_game(data,conn)
     ,
-    'FIND_GAMES': (data, conn)=> game_service.find_games(data, conn)
+    'FIND_GAMES': (data, conn)=> game_service.find_available_games(data, conn)
+    ,
+    'FIND_JOINED_GAMES': (data,conn)=> game_service.find_joined_games(data, conn)
     ,
     'ADD_PLAYER': (data, conn)=> game_service.add_player(data, conn)
     ,

@@ -1,24 +1,16 @@
 const abilities = {
    'four': () => {
       return (game, result) => {
-         let prev;
-         let turn = game.now - game.turn
-         if (turn < 0) {
-            prev = game.players.length + turn
-         } else if (turn >= game.players.length) {
-            prev = turn - game.players.length
-         } else {
-            prev = turn
-         }
-         result.prev_player = game.players[prev_player]
-         for (let card of game.players[prev].cards) {
+        let prev_player = game.prev_player()
+         result.prev_player = prev_player 
+         for (let card of prev_player.cards) {
             if (card.type == game.last_card.color) {
-               game.players[prev].cards = game.players[prev].cards.concat(game.get_some_cards(4));
+               game.private_draw(prev_player,4);
                result.bluffed = true;
                return null;
             }
          }
-         game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(6));
+         game.private_draw(game.now_player(),6);
          result.bluffed = false;
          return null;
       }
@@ -30,8 +22,8 @@ const abilities = {
    },
    'draw': () => {
       return (game) => {
-         game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(2));
-         game.next();
+         game.private_draw(game.now_player(), 2);
+         //game.next();
          return null;
       }
    },
@@ -41,7 +33,7 @@ const abilities = {
    },
    'draw_one': (game, skip) => {
       if (!skip) {
-         game.now_player().cards = game.now_player().cards.concat(game.get_some_cards(1));
+         game.private_draw(game.now_player(),1)
       }
       return null;
    },
