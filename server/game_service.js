@@ -35,7 +35,7 @@ async function create_game(data, conn) {
 module.exports.create_game = create_game;
 
 
-function continue_game(data,conn)
+async function continue_game(data,conn)
 {
   try {
     let in_game = await check_in_game(data), game;
