@@ -196,7 +196,11 @@ class Game {
                 continue outer;
             }
         }
-        console.log('POSSIBLE CARD', this.possible_cards)
+        if(this.now_player.cards.length = 1)
+        {
+            this.possible_cards.filter(card=>!card.is_wild_card())
+        }
+        console.log('POSSIBLE CARDS', this.possible_cards)
     }
 
     check_possible(poss_card) {

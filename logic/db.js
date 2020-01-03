@@ -1,5 +1,6 @@
 const client = require('./redis')
 
+//#Save game in redis-db
 const save_game = (game) => {
     client.SET(game.id, JSON.stringify(game.repr()), (err) => {
         if(err) {
@@ -11,6 +12,7 @@ const save_game = (game) => {
 module.exports.save_game = save_game
 
 
+//#Get array of games,which player is currently in
 const load_games_by_player_id = async(player_id) => 
 {
   console.log(player_id);
@@ -21,6 +23,7 @@ const load_games_by_player_id = async(player_id) =>
 module.exports.load_by_id = load_games_by_player_id
 
 
+//#Delete game by game id
 const delete_game = async(game_id) => {
     let keys = await get_keys(game_id);
     if(keys == []) throw new Error('NOT_FOUND_GAME')
@@ -33,6 +36,7 @@ const delete_game = async(game_id) => {
 module.exports.delete_game = delete_game;
 
 
+//#Get array of games by username of creator
 const find_games = async username => 
 {
    let keys = await get_keys('*');
@@ -42,6 +46,7 @@ const find_games = async username =>
 module.exports.find_games = find_games;
 
 
+//#Get game by game id
 const load_game = (key) => new Promise((resolve, reject) => {
     client.GET(key, function (err, obj) {
         if(err) reject('DATABASE_KEY_ERROR')
@@ -51,6 +56,8 @@ const load_game = (key) => new Promise((resolve, reject) => {
 })
 module.exports.load_game = load_game
 
+
+//#Get redis-keys
 const get_keys = (key) => new Promise((resolve, reject) => {
     client.keys(key, function (err, keys) {
         if(err) 
