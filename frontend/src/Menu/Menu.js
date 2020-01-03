@@ -31,16 +31,12 @@ class Menu extends Component {
         };
         connection.onmessage = function (message) {
             let json;
-            try{
+           
                 json = JSON.parse(message.data);
-            }
-            catch(e) {
-                json = JSON.parse(message.game);
-            }
             
             switch(json.type) {
                 case 'PLAYER_JOINED': {
-                    console.log(json)
+                    console.log('GAME',json)
                     pg.props.dispatch(gameActions.joinGame(json));
                     break;
                 }
@@ -59,6 +55,7 @@ class Menu extends Component {
                 case 'ALREADY_IN_GAME':
                     {
                         alert('ALREADY_IN_GAME');
+                        console.log('GAME', json)
                         break;
                     }
                 case 'GAME_STARTED' :
