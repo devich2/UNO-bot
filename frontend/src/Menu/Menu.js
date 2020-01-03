@@ -50,9 +50,9 @@ class Menu extends Component {
                         pg.props.dispatch(gameActions.joinGame(json))
                         break;
                     }
-                case 'SET_GAMES': 
+                case 'SET_AVAILABLE_GAMES': 
                 {
-                    console.log('JSONdata',json.data);
+                    console.log('AVAILABLE_GAMES',json.data);
                     pg.props.dispatch(loginActions.setGames(json.data));
                     break;
                 }

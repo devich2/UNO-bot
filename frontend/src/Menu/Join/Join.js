@@ -14,7 +14,7 @@ class Join extends Component{
 
     handleChange(e) {
         console.log(this.props);
-        connection.send(JSON.stringify({type: "FIND_GAMES", username: e.target.value}));
+        connection.send(JSON.stringify({type: "FIND_GAMES", player: { username: e.target.value}}));
     }
     joinGame(game_id)
     {

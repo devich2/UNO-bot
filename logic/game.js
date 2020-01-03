@@ -196,7 +196,7 @@ class Game {
                 continue outer;
             }
         }
-        if(this.now_player.cards.length = 1)
+        if(this.now_player().cards.length = 1)
         {
             this.possible_cards.filter(card=>!card.is_wild_card())
         }
@@ -248,6 +248,7 @@ class Game {
         this.last_card.color = color;
         return Object.assign(this.end_turn() , this.last_card.content == 'four' ? { can_call_bluff: true }: {});
     }
+    
     end_turn(next_step = true, change_possible = false)
     {
         console.log(this.last_card);
@@ -258,7 +259,7 @@ class Game {
             });
         }
         console.log('Here', next_step);
-        let res = Object.assign({over : this.is_over()}, this.check_winner());
+        let res = Object.assign(this.check_winner(),{over : this.is_over()});
         if(res.over){}
         else
         {

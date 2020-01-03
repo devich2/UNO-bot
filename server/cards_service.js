@@ -117,8 +117,10 @@ async function put_card(data, conn) {
                 winner: res.winner
             }),game.players);
         }
+        console.log('OVER', res.over)
         if(res.over){
-            broadcast.send(send_game('OVER', data), game.players);
+            broadcast.send(send_game('GAME_DELETED', data, game), game.players);
+            storage.delete_game(game.id)
         }
         else 
         {

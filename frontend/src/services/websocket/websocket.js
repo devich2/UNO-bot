@@ -1,6 +1,6 @@
 
 
-let connection = new WebSocket('ws://discount-space.herokuapp.com/');   //ws://discount-space.herokuapp.com
+let connection = new WebSocket('ws://localhost:8080/');   //ws://discount-space.herokuapp.com
 
 connection.onopen = function () {
 };
