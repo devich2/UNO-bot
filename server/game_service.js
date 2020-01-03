@@ -123,9 +123,7 @@ async function find_games(data, conn) {
   }
   catch(e)
   {
-    conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
-      id: data.game.id
-    })));
+    conn.sendUTF(JSON.stringify(send_game(e.message || e, data)));
   }
 }
 module.exports.find_available_games = find_games;
