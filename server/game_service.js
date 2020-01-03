@@ -135,7 +135,12 @@ module.exports.start_game = start_game;
 
 async function find_games(data, conn) {
   try{
-    let games = await storage.find_games(data.player.username);
+    let username = data.player.username, games;
+    if(!username || username == ''){ games = []}
+    else
+    {
+      games = await storage.find_games(username);
+    }
     let res = games.length > 0 ? {
       data: games
     } : {}
