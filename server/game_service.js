@@ -45,7 +45,7 @@ async function continue_game(data,conn)
       })));
     } else {
       game = new logic.Game(in_game);
-      conn.sendUTF(JSON.stringify(send_game("GOT_GAME", data, game)));
+      conn.sendUTF(JSON.stringify(send_game("PLAYER_JOINED", data, game)));
     }
   } catch (e) {
     console.log(e)
