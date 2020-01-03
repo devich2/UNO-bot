@@ -151,11 +151,7 @@ class Game {
                 }
             })
             this.players.forEach(player => {
-                if(player.first_name = 'Devid')
-                {
-                    player.cards = this.get_some_cards(50)
-                }
-                else player.cards = this.get_start_cards();
+                 player.cards = this.get_start_cards();
               
             });
             this.players = shuffle(this.players);
