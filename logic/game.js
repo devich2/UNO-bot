@@ -80,7 +80,7 @@ class Game {
         if (this.players.length > 10) throw new Error('FULL_ROOM');
         let player = new Player(dict); //check 
         this.players.push(player);
-        if(this.started) this.players.card = this.get_start_cards();
+        if(this.started) this.players.cards = this.get_start_cards();
     }
 
     remove_player(dict) //need delete player cards
