@@ -7,7 +7,7 @@
   "description": "Воплощение карточной игры Uno в виде  MOG(Multiplayer Online Game).",
   "main": "index.js",
   "scripts": {
-    "start": "node ./server/websocket-server.js",
+    "start": "node server/websocket-server.js",
     "test": "node index.js"
   },
   "repository": {
