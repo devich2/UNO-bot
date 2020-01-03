@@ -13,7 +13,7 @@ class Card {
     
     
       set color(color) {
-        if (!this.isWildCard())
+        if (!this.is_wild_card())
           throw new Error('Only wild cards can have theirs colors changed.');
         else if (color != 'r' && color !='b' && color !='g' && color !='y')
           throw new Error('Invalid color.');
