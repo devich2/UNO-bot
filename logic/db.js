@@ -49,6 +49,7 @@ module.exports.find_games = find_games;
 //#Get game by game id
 const load_game = (key) => new Promise((resolve, reject) => {
     client.GET(key, function (err, obj) {
+        console.log('KEY', key);
         if(err) reject('DATABASE_KEY_ERROR')
         else if (obj == null) reject('NOT_FOUND_GAME')
         else resolve(JSON.parse(obj))
