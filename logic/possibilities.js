@@ -2,7 +2,7 @@ const possibilities = {
 
     'four': (card, change)=>
     {
-        return [{'type' : card.color}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
+        return [].concat(change ? [{'type' : card.color}, {'content': 'four'}, {'content': 'color'}] : []);
     },
     'reverse': (card, change)=>
     {

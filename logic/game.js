@@ -195,7 +195,7 @@ class Game {
         }
         if(this.now_player().cards.length == 1)
         {
-            this.possible_cards.filter(card=>!card.is_wild_card())
+           this.possible_cards = this.possible_cards.filter(card=>!card.is_wild_card())
         }
         console.log('POSSIBLE CARDS', this.possible_cards)
     }
@@ -233,17 +233,25 @@ class Game {
       }
     
     
-    check_honest() {
-        let result = {};
+    check_honest(check) {
+        let result = {}; 
         console.log(this.ability);
-        this.ability = this.ability(this,result);
+        this.ability = this.ability(this,check,result);
         this.end_turn(!result.bluffed);
         return result;
     }
     set_color(color) {
 
-        this.last_card.color = color;
-        return Object.assign(this.end_turn() , this.last_card.content == 'four' ? { can_call_bluff: true }: {});
+        try{
+            this.last_card.set_color(color);
+            console.log("COLORS", color, this.last_card.color);
+            return Object.assign(this.end_turn() , this.last_card.content == 'four' ? { can_call_bluff: true }: {});
+        }
+        catch(e)
+        {
+            console.log(e || e.message)
+        }
+       
     }
     
     end_turn(next_step = true, change_possible = false)

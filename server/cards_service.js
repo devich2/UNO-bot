@@ -69,7 +69,7 @@ async function call_bluff(data) {
         let game_content = await storage.load_game(data.game.id);
         let game = new logic.Game(game_content);
         if (game.now_player().id != data.game.player.id) throw new Error('NOT_YOU');
-        let res = game.check_honest();
+        let res = game.check_honest(data.challenge);
         storage.save_game(game);
         broadcast.send(send_game('CALLED_BLUFF', data, game, res), game.players);
     } catch (e) {
@@ -90,6 +90,10 @@ async function pass(data, skip, conn) {
         console.log('GAME_CONTENT', game_content)
         let game = new logic.Game(game_content);
         if (game.now_player().id != data.game.player.id) throw new Error('NOT_YOU');
+        if(game.last_card.content == 'draw')
+        {
+            skip = true
+        }
         game.pass(skip);
         storage.save_game(game);
         broadcast.send(send_game(skip ? 'PUT_CARD' : 'PREPARE_PASS', data, game), skip ? game.players : null, skip ? null : conn);

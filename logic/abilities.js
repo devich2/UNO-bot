@@ -1,18 +1,27 @@
 const abilities = {
    'four': () => {
-      return (game, result) => {
-        let prev_player = game.prev_player()
-         result.prev_player = prev_player 
-         for (let card of prev_player.cards) {
-            if (card.type == game.last_card.color) {
-               game.private_draw(prev_player,4);
-               result.bluffed = true;
-               return null;
+      return (game, check , result) => {
+         if(check)
+         {
+            let prev_player = game.prev_player()
+            result.prev_player = prev_player 
+            for (let card of prev_player.cards) {
+               if (card.type == game.last_card.color) {
+                  game.private_draw(prev_player,4);
+                  result.bluffed = true;
+                  return null;
+               }
             }
+            game.private_draw(game.now_player(),6);
+            result.bluffed = false;
+            return null;
          }
-         game.private_draw(game.now_player(),6);
-         result.bluffed = false;
-         return null;
+         else 
+         {
+            game.private_draw(game.now_player(),4)
+            return null
+         }
+     
       }
    },
    'reverse': (game) => {

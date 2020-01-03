@@ -4,7 +4,7 @@ const Telegraf = require('telegraf')
 
 exports.bot = new Telegraf('744209775:AAGD-ikirLHQ2UP6MCrFI-Z51lPEAgX3rBg')
 
-const url = 'ws://discount-space.herokuapp.com/';
+const url = 'ws://localhost:8080/';
 
 const ws = new WebSocket(url);
 
@@ -27,6 +27,10 @@ ws.on('message', (data) => {
     loader.emit(resp.type, resp)
 });
 
-ws.on('error', () => console.log('DISCONNECTED'));
+ws.on('error', () => 
+{
+    ws = new WebSocket(url);
+    console.log('DISCONNECTED')
+});
 
 exports.loader = loader

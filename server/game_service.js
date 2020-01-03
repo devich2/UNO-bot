@@ -35,6 +35,28 @@ async function create_game(data, conn) {
 module.exports.create_game = create_game;
 
 
+function continue_game(data,conn)
+{
+  try {
+    let in_game = await check_in_game(data), game;
+    if (!in_game) {
+      conn.sendUTF(JSON.stringify(Object.assign(data, {
+        type: 'NOT_IN_GAME'
+      })));
+    } else {
+      game = new logic.Game(in_game);
+      conn.sendUTF(JSON.stringify(send_game("GOT_GAME", data, game)));
+    }
+  } catch (e) {
+    console.log(e)
+    conn.sendUTF(JSON.stringify(Object.assign(data, {
+      type: e.message || e
+    })));
+  }
+}
+module.exports.continue_game = continue_game;
+
+
 async function add_player(data, conn) {
   try {
     let in_game = await check_in_game(data), content, game;

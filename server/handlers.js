@@ -28,7 +28,7 @@ const handlers =
     //#Admin handler - currently not used
     'DELETE_GAME': (data, conn)=> game_service.delete_game(data,conn)
     ,
-    //#
+    //#Handler for continuing game                                                   (front)
     'CONTINUE_GAME': (data,conn)=> game_service.continue_game(data,conn)
     ,
     /*#Handler for finding games, passed parameter - letter/word (username of creator)
@@ -66,6 +66,5 @@ const handlers =
     //#Handler to get one card (prepare pass)                                         (front, telegram) 
     'GET_CARD': (data, conn)=> cards_service.pass(data, false, conn)
     ,
-
 }
 module.exports = handlers;
