@@ -1,4 +1,4 @@
-const mappings = [
+const mappings = 
     {   'CAADAgADiQMAAk9wUEg1fzyY8FgCZgI': 'draw_four' ,  
          'CAADAgADmwMAAk9wUEgGjFv_XetVPAI': 'colorchooser' ,  
          'CAADAgAD3AIAAseySUhy5e5w5AYaqwI': 'y_reverse' ,  
@@ -53,5 +53,5 @@ const mappings = [
          'CAADAgADjwMAAk9wUEiFG0ayDANWvwI': 'r_9' ,
          'CAADAgADjAMAAk9wUEgrDuMzknc7gQI': 'b_9' ,
         ' CAADAgADlQMAAk9wUEg8X2LEMEOjJQI': 'g_9' }
-      ]
+      
 module.exports = mappings;

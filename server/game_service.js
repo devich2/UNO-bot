@@ -158,9 +158,9 @@ module.exports.find_available_games = find_games;
 
 async function find_joined_games(data, conn) {
   try{
-    let games = await storage.load_by_id(data.player.id);
+    let games = await storage.load_by_id(data.player.id);  
     let res = games.length > 0 ? {
-      data: games
+      data: games                                           
     } : {}
     conn.sendUTF(JSON.stringify(Object.assign({
       type: 'SET_JOINED_GAMES'

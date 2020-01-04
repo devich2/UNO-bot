@@ -7,7 +7,7 @@ function getRandomInt(min, max) {
   const letters = ['a','b','c','d','f','g','r','y','u','1','2','3','4','5','6','40','544'];
  const initialState = Immutable({
     Logged: true,
-    User: {id: '123333' + letters[getRandomInt(0, letters.length-1)], first_name: 'dolboeb', last_name: 'petia', username: 'hitr3cswhfssdsd5544445', available_games: []}//undefined
+    User: {id: '12333340', first_name: 'dolboeb', last_name: 'petia', username: 'hitr3cswhfssdsd5544445', available_games: []}//undefined
 });
 
 export default function reduce(state = initialState, action = {}) {

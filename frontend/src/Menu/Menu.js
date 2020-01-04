@@ -56,6 +56,7 @@ class Menu extends Component {
                     {
                         alert('ALREADY_IN_GAME');
                         console.log('GAME', json)
+                        pg.props.dispatch(gameActions.joinGame(json));
                         break;
                     }
                 case 'GAME_STARTED' :
@@ -63,14 +64,14 @@ class Menu extends Component {
                         pg.props.dispatch(gameActions.startGame(json));
                         break;
                     }
-                    case 'SET_JOINED_GAMES': 
+                case 'SET_JOINED_GAMES': 
                     {
                         console.log('JOINED_GAMES',json.data);
                         pg.props.dispatch(loginActions.setGames(json.data));
                         break;
                     }
             }
-        };
+        }; 
     } 
 
     onContinueClick(){
