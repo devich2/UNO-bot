@@ -36,7 +36,7 @@ module.exports.create_game = create_game;
 
 function send_hanging_actions(game, data, conn)
 { 
-  let now_playing = data.game.player.username == game.now_player().username;
+  let now_playing = data.game.player.username == game.now_player().username; 
   if(now_playing)
   {
     if(game.check_can_call_bluff())
