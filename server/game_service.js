@@ -84,9 +84,9 @@ async function add_player(data, conn) {
     if (in_game) {
       console.log('IN GAME')
       game = new logic.Game(in_game)
-      conn.sendUTF(JSON.stringify(Object.assign(data, {
+      conn.sendUTF(JSON.stringify(send_game({
         type: 'ALREADY_IN_GAME'
-      }, game)));
+      },data, game)));
       send_hanging_actions(game, data, conn)
     } else {
      content = await storage.load_game(data.game.id);
