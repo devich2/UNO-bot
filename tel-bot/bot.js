@@ -137,7 +137,9 @@ callback.on('blue', (ctx) => {
 })
 
 loader.on('PREPARE_PASS', (data) => {
-    const button = Telegraf.Extra.markup((markup) =>
+    if(data.chat)
+    {
+        const button = Telegraf.Extra.markup((markup) =>
         markup.inlineKeyboard(
             [
                 [markup.callbackButton('▶️', 'pass')],
@@ -146,8 +148,10 @@ loader.on('PREPARE_PASS', (data) => {
         )
     )
     bot.telegram.editMessageReplyMarkup(data.chat.id, data.message.id, null, button.reply_markup)
+    }
+   
 })
-
+       
 bot.on('chosen_inline_result', (ctx) => {
     if (ctx.chosenInlineResult.result_id.length > 5) {
         send({
@@ -219,6 +223,10 @@ loader.on('ALREADY_IN_GAME', (data) => {
     sendMessage(data, 'You are already in gaME')
 })
 
+loader.on('GAME_ALREADY_STARTED', (data) => {
+    sendMessage(data, 'Game already created in this chat')
+})
+
 loader.on('GAME_CREATED', (data) => {
     bot.telegram.sendMessage(data.id, 'Game was CREATED!!!', Telegraf.Extra.HTML())
 })
@@ -243,6 +251,10 @@ loader.on('PUT_CARD', (data) => {
     if (data.color) {
         const color = (data.color == 'g' && 'GREEN 💚') || (data.color == 'r' && 'RED ❤️') || (data.color == 'y' && 'YELLOW 💛') || (data.color == 'b' && 'BLUE 💙')
         sendMessage(data, `Choosee ${color} color`)
+    }
+    if(data.player && (data.player.is_bot == null || data.player.is_bot == undefined))
+    {
+        bot.telegram.sendSticker(data.game.id, data.game.last_card.id)
     }
     sendGame(data)
 })

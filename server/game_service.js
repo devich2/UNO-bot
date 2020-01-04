@@ -4,13 +4,15 @@ const broadcast = require("./websocket_service")
 
 async function create_game(data, conn) {
   try {
-    let in_game = await check_in_game(data), game;
-    if (in_game) {
-      game = new logic.Game(in_game)
+    console.log('HERE')
+    let game_created = await check_game_created(data), game;
+    if (game_created) {
+      console.log('ALREADY CREATED')
       conn.sendUTF(JSON.stringify(Object.assign(data, {
-        type: 'ALREADY_IN_GAME'
-      }, game)))
+        type: 'GAME_ALREADY_STARTED'
+      })))
     } else {
+      console.log('Created game')
         game = new logic.Game({
         id: data.game.id,
         creator: data.game.player.username,
@@ -41,59 +43,36 @@ function send_hanging_actions(game, data, conn)
   {
     if(game.check_can_call_bluff())
     {
-      conn.sendUTF(JSON.stringify(send_game({type: 'CAN_CALL_BLUFF'}, data,game)))
+      conn.sendUTF(JSON.stringify(send_game('CAN_CALL_BLUFF', data,game)))
     }
     else if(game.check_can_change_color())
     {
-      conn.sendUTF(JSON.stringify(send_game({type: 'CHANGE_COLOR'}, data,game)))
+      conn.sendUTF(JSON.stringify(send_game('CHANGE_COLOR', data,game)))
     }
     else if (game.drawn)
     {
-      conn.sendUTF(JSON.stringify(send_game({type: 'PREPARE_PASS'}, data,game)))
+      conn.sendUTF(JSON.stringify(send_game('PREPARE_PASS', data,game)))
     }
   }
-
+ 
 }
-
-async function continue_game(data,conn)
-{
-  try {
-    let in_game = await check_in_game(data), game;
-    if (!in_game) {
-      conn.sendUTF(JSON.stringify(Object.assign(data, {
-        type: 'NOT_IN_GAME'
-      })));
-    } else {
-      game = new logic.Game(in_game);
-      conn.sendUTF(JSON.stringify(send_game("PLAYER_JOINED", data, game)));
-      //send_hanging_actions(game, data, conn)
-    }
-  } catch (e) {
-    console.log(e)
-    conn.sendUTF(JSON.stringify(Object.assign(data, {
-      type: e.message || e
-    })));
-  }
-}
-module.exports.continue_game = continue_game;
 
 
 async function add_player(data, conn) {
   try {
+    console.log('DATA', data);
     let in_game = await check_in_game(data), content, game;
     if (in_game) {
-      console.log('IN GAME')
+      console.log('IN GAME',in_game)
       game = new logic.Game(in_game)
-      conn.sendUTF(JSON.stringify(send_game({
-        type: 'ALREADY_IN_GAME'
-      },data, game)));
-      //send_hanging_actions(game, data, conn)
+      //console.log(game);
+      conn.sendUTF(JSON.stringify(send_game('ALREADY_IN_GAME',data, game)));
+      send_hanging_actions(game, data, conn)
     } else {
-     content = await storage.load_game(data.game.id);
-     game = new logic.Game(content);
+      content = await storage.load_game(data.game.id);
+      game = new logic.Game(content);
       game.add_player(data.game.player);
       storage.save_game(game); 
-     // console.log('Game after adding player', game);
       broadcast.send(send_game("PLAYER_JOINED", data, game), game.players);
     }
   } catch (e) {
@@ -112,7 +91,7 @@ async function delete_player(data, conn) {
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
     console.log('GAMESD',game, game.now)
-    let set_color = (game.now_player().username == data.game.player.username) && (game.check_can_change_color() || game.check_can_call_bluff())
+    let unset_color = (game.now_player().username == data.game.player.username) && (game.check_can_change_color())
     let deleted_player = game.remove_player(data.game.player);
     console.log('Deleted player', deleted_player)
     storage.save_game(game);
@@ -127,7 +106,7 @@ async function delete_player(data, conn) {
         left: deleted_player
       }), game.players);
 
-      if(set_color)
+      if(unset_color)
       {
         let prev_last_card = game.used_cards[game.used_cards.length-1]
         game.set_color(prev_last_card.color || prev_last_card.type)
@@ -212,7 +191,9 @@ async function delete_game(data, conn) {
   try {
     let game = await storage.load_game(data.game.id)
     storage.delete_game(data.game.id);
-    broadcast.send(send_game('GAME_DELETED'), game.players);
+    broadcast.send(Object.assign(data, {
+      type: "GAME_DELETED"
+    }), game.players);
   } catch (e) {
     conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
       id: data.game.id
@@ -237,7 +218,7 @@ async function get_game(data, conn) {
 module.exports.get_game = get_game;
 
 
-const send_game = (type, data, game, args = {}) => Object.assign(data, {
+const send_game = (type, data, game, args = {}) => Object.assign({},data, {
   type: type,
   game: {
     id: game.id,
@@ -262,4 +243,10 @@ async function check_in_game(data) {
   let games = await storage.load_by_id(data.game.player.id);
   let index = games.findIndex(game=> game.id == data.game.id)
   return index!=-1 ? games[index] : null;
+}
+
+async function check_game_created(data)
+{
+  let game_created = await storage.exists_game(data.game.id)
+  return game_created;
 }

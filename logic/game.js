@@ -163,7 +163,6 @@ class Game {
                  player.cards = this.get_start_cards();
                 
             });
-             console.log('CARDSFUCK',this.players[0].cards)
             this.players = shuffle(this.players);
             this.now = getRandomInt(0, this.players.length - 1);
             let random_int;

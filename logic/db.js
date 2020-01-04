@@ -11,6 +11,14 @@ const save_game = (game) => {
 }
 module.exports.save_game = save_game
 
+const exists_game = (game_id)=>new Promise((resolve, reject) => {
+    client.GET(game_id, function (err, obj) {
+        if(err) reject('DATABASE_KEY_ERROR')
+        else if (obj == null) resolve(false)
+        else resolve(true)
+    });
+})
+module.exports.exists_game = exists_game
 
 //#Get array of games,which player is currently in
 const load_games_by_player_id = async(player_id) => 

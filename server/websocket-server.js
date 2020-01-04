@@ -1,7 +1,7 @@
 const http = require('http')
 const webSocketServer = require('websocket').server
 const handlers = require('./handlers')
-const webSocketsServerPort = process.env.PORT //process.env.PORT
+const webSocketsServerPort = process.env.PORT//process.env.PORT
 const server = http.createServer()
 
 server.listen(webSocketsServerPort, '0.0.0.0', function () {
@@ -21,7 +21,11 @@ wsServer.on('request', function (request) {
     if (message.type == 'utf8') {
       let data = JSON.parse(message.utf8Data)
       console.log(data);
-      handlers[data.type](data,connection)
+      if(!handlers[data.type])
+      {
+         connection.sendUTF(JSON.stringify({type: 'СУЧАРА, ВСЕ ИВЕНТЫ В ФАЙЛЕ ПРОПИСАНЫ'}))
+      }
+      else handlers[data.type](data,connection)
       
     }
   })

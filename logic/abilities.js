@@ -1,10 +1,10 @@
 const abilities = {
    'four': () => {
       return (game, check , result) => {
+         let prev_player = game.prev_player()
+         result.prev_player = prev_player 
          if(check)
          {
-            let prev_player = game.prev_player()
-            result.prev_player = prev_player 
             for (let card of prev_player.cards) {
                if (card.type == game.last_card.color) {
                   game.private_draw(prev_player,4);
