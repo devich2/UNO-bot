@@ -92,7 +92,7 @@ async function add_player(data, conn) {
      content = await storage.load_game(data.game.id);
      game = new logic.Game(content);
       game.add_player(data.game.player);
-      storage.save_game(game);
+      storage.save_game(game); 
      // console.log('Game after adding player', game);
       broadcast.send(send_game("PLAYER_JOINED", data, game), game.players);
     }
