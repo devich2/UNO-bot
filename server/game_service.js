@@ -66,7 +66,7 @@ async function continue_game(data,conn)
     } else {
       game = new logic.Game(in_game);
       conn.sendUTF(JSON.stringify(send_game("PLAYER_JOINED", data, game)));
-      send_hanging_actions(game, data, conn)
+      //send_hanging_actions(game, data, conn)
     }
   } catch (e) {
     console.log(e)
@@ -87,7 +87,7 @@ async function add_player(data, conn) {
       conn.sendUTF(JSON.stringify(send_game({
         type: 'ALREADY_IN_GAME'
       },data, game)));
-      send_hanging_actions(game, data, conn)
+      //send_hanging_actions(game, data, conn)
     } else {
      content = await storage.load_game(data.game.id);
      game = new logic.Game(content);
