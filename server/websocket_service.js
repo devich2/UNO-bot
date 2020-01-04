@@ -67,6 +67,7 @@ function save_connection(data, conn) {
   }
   module.exports.send = broadcast;
 
+
 function renameProperty(o, old_key, new_key)
 {
   if (old_key !== new_key) {

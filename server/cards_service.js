@@ -94,6 +94,7 @@ async function pass(data, skip, conn) {
         {
             skip = true
         }
+        game.drawn = !skip;
         game.pass(skip);
         storage.save_game(game);
         broadcast.send(send_game(skip ? 'PUT_CARD' : 'PREPARE_PASS', data, game), skip ? game.players : null, skip ? null : conn);
@@ -146,7 +147,7 @@ async function set_color(data,conn) {
         if (data.game.player.id != game.now_player().id) throw new Error('NOT_YOU');
         let res = game.set_color(data.color);
         storage.save_game(game);
-        broadcast.send(send_game('PUT_CARD', data, game, res), game.players);
+        broadcast.send(send_game('PUT_CARD', data, game), game.players);
     } catch (e) {
         conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
             id: data.game.id

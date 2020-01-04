@@ -37,6 +37,7 @@ class Game {
         this.winner = dict.winner ? dict.winner : 0; //1 | 0
         this.ability = abilities[dict.ability] ? abilities[dict.ability]() : null;
         this.started = dict.started ? dict.started : false;
+        this.drawn = dict.drawn ? dict.drawn : false;
     }
 
     now_player() {
@@ -71,7 +72,8 @@ class Game {
             turn: this.turn,
             ability: this.ability ? this.last_card.content : 0,
             winner: this.winner,
-            started: this.started
+            started: this.started,
+            drawn: this.drawn
          
         }
     }
@@ -235,17 +237,24 @@ class Game {
     
     check_honest(check) {
         let result = {}; 
-        console.log(this.ability);
         this.ability = this.ability(this,check,result);
-        this.end_turn(!result.bluffed);
+        this.end_turn(!result.bluffed,true);
         return result;
+    }
+    check_can_call_bluff()
+    {
+        return this.last_card.content == 'four' && this.last_card.color;
+    }
+    check_can_change_color()
+    {
+        return this.last_card.is_wild_card() && !this.last_card.color;
     }
     set_color(color) {
 
         try{
             this.last_card.set_color(color);
             console.log("COLORS", color, this.last_card.color);
-            return Object.assign(this.end_turn() , this.last_card.content == 'four' ? { can_call_bluff: true }: {});
+            return Object.assign(this.end_turn() , this.check_can_call_bluff() ? { can_call_bluff: true }: {});
         }
         catch(e)
         {
@@ -257,7 +266,7 @@ class Game {
     end_turn(next_step = true, change_possible = false)
     {
         console.log(this.last_card);
-        if (this.last_card.is_wild_card() && !this.last_card.color) {
+        if (this.check_can_change_color()) {
             console.log('Not added possible');
             return Object.assign({
                 change_color: true

@@ -34,6 +34,26 @@ async function create_game(data, conn) {
 }
 module.exports.create_game = create_game;
 
+function send_hanging_actions(game, data, conn)
+{ 
+  let now_playing = data.game.player.username == game.now_player().username;
+  if(now_playing)
+  {
+    if(game.check_can_call_bluff())
+    {
+      conn.sendUTF(JSON.stringify(Object.assign({type: 'CAN_CALL_BLUFF'}, game)))
+    }
+    else if(game.check_can_change_color())
+    {
+      conn.sendUTF(JSON.stringify(Object.assign({type: 'CHANGE_COLOR'}, game)))
+    }
+    else if (game.drawn)
+    {
+      conn.sendUTF(JSON.stringify(Object.assign({type: 'PREPARE_PASS'}, game)))
+    }
+  }
+
+}
 
 async function continue_game(data,conn)
 {
@@ -46,6 +66,7 @@ async function continue_game(data,conn)
     } else {
       game = new logic.Game(in_game);
       conn.sendUTF(JSON.stringify(send_game("PLAYER_JOINED", data, game)));
+      send_hanging_actions(game, data, conn)
     }
   } catch (e) {
     console.log(e)
@@ -66,6 +87,7 @@ async function add_player(data, conn) {
       conn.sendUTF(JSON.stringify(Object.assign(data, {
         type: 'ALREADY_IN_GAME'
       }, game)));
+      send_hanging_actions(game, data, conn)
     } else {
      content = await storage.load_game(data.game.id);
      game = new logic.Game(content);
@@ -89,6 +111,7 @@ async function delete_player(data, conn) {
     console.log('Here');
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
+    let set_color = (game.now_player().username == data.game.player.username) && (game.check_can_change_color() || game.check_can_call_bluff())
     let deleted_player = game.remove_player(data.game.player);
     console.log('Deleted player', deleted_player)
     storage.save_game(game);
@@ -102,6 +125,14 @@ async function delete_player(data, conn) {
         type: "PLAYER_LEFT",
         left: deleted_player
       }), game.players);
+
+      if(set_color)
+      {
+        let prev_last_card = game.used_cards[game.used_cards.length-1]
+        game.set_color(prev_last_card.color || prev_last_card.type)
+        storage.save_game(game);
+        broadcast.send(send_game('PUT_CARD', data, game), game.players);
+      }
     }
 
   } catch (e) {
