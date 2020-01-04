@@ -41,15 +41,15 @@ function send_hanging_actions(game, data, conn)
   {
     if(game.check_can_call_bluff())
     {
-      conn.sendUTF(JSON.stringify(Object.assign({type: 'CAN_CALL_BLUFF'}, game)))
+      conn.sendUTF(JSON.stringify(send_game({type: 'CAN_CALL_BLUFF'}, data,game)))
     }
     else if(game.check_can_change_color())
     {
-      conn.sendUTF(JSON.stringify(Object.assign({type: 'CHANGE_COLOR'}, game)))
+      conn.sendUTF(JSON.stringify(send_game({type: 'CHANGE_COLOR'}, data,game)))
     }
     else if (game.drawn)
     {
-      conn.sendUTF(JSON.stringify(Object.assign({type: 'PREPARE_PASS'}, game)))
+      conn.sendUTF(JSON.stringify(send_game({type: 'PREPARE_PASS'}, data,game)))
     }
   }
 

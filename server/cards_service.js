@@ -109,7 +109,7 @@ module.exports.pass = pass;
 
 
 async function put_card(data, conn) {
-    let game = null;
+    let game = {};
     try {
         const player_id = data.player.id;
         const game_content = await storage.load_by_id(player_id);
