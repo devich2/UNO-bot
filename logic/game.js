@@ -81,6 +81,7 @@ class Game {
     add_player(dict) {
         if (this.players.length > 10) throw new Error('FULL_ROOM');
         let player = new Player(dict); //check 
+        console.log('STARTED',this.started)
         if(this.started == true) 
         {
             console.log('ADDED');
