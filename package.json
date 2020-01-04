@@ -7,8 +7,8 @@
   "description": "Воплощение карточной игры Uno в виде  MOG(Multiplayer Online Game).",
   "main": "index.js",
   "scripts": {
-    "start": "node server/websocket-server.js && cd tel-bot && npm start",
-    "heroku-postbuild": "cd tel-bot && npm install --only=dev && npm install",
+    "start": "node server/websocket-server.js",
+    "heroku-postbuild": "cd tel-bot && npm install --only=dev && npm install && npm start",
     "test": "node index.js"
   },
   "repository": {
