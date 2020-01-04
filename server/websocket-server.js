@@ -27,6 +27,5 @@ wsServer.on('request', function (request) {
   })
   connection.on('close', function (code) {
     handlers['DELETE_CONNECTION'](connection)
-    console.log(connection)
   })
 })
