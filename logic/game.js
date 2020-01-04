@@ -97,7 +97,8 @@ class Game {
         if(index == -1) throw new Error('PLAYER_NOT_FOUND');
         let cards = this.players[index].cards;
         if(cards.length > 0) this.cards = this.cards.concat(cards);
-        this.now--;
+        if(index == this.now == this.players.length - 1) { this.now = 0 }
+        else if(this.now > index) this.now--
         return this.players.splice(index, 1)[0];
     }
     next(turns = 1) {

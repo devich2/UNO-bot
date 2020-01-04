@@ -108,9 +108,10 @@ module.exports.add_player = add_player;
 
 async function delete_player(data, conn) {
   try {
-    console.log('Here');
+    console.log('Here',data.game.id);
     let content = await storage.load_game(data.game.id);
     let game = new logic.Game(content);
+    console.log('GAMESD',game, game.now)
     let set_color = (game.now_player().username == data.game.player.username) && (game.check_can_change_color() || game.check_can_call_bluff())
     let deleted_player = game.remove_player(data.game.player);
     console.log('Deleted player', deleted_player)
