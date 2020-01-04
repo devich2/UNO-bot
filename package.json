@@ -9,7 +9,7 @@
   "scripts": {
     "start": "node server/websocket-server.js",
     "heroku-postbuild": "cd tel-bot && npm install --only=dev && npm install && npm start",
-    "test": "node index.js"
+    "test": "jest"
   },
   "repository": {
     "type": "git",
