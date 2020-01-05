@@ -1,0 +1,6 @@
+const create_card = require('./help-data/card')
+const Values = require("./help-data/values")
+const Types = require("./help-data/types")
+const Colors = require("./help-data/colors")
+const Card = require("../logic/card")
+const Game = require("../")

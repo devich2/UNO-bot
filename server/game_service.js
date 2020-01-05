@@ -41,7 +41,7 @@ function send_hanging_actions(game, data, conn)
   let now_playing = data.game.player.username == game.now_player().username; 
   if(now_playing)
   {
-    if(game.check_can_call_bluff())
+    if(game.check_can_call_bluff() && game.ability)
     {
       conn.sendUTF(JSON.stringify(send_game('CAN_CALL_BLUFF', data,game)))
     }
@@ -110,6 +110,7 @@ async function delete_player(data, conn) {
       {
         let prev_last_card = game.used_cards[game.used_cards.length-1]
         game.set_color(prev_last_card.color || prev_last_card.type)
+        game.ability = null;
         storage.save_game(game);
         broadcast.send(send_game('PUT_CARD', data, game), game.players);
       }
@@ -244,6 +245,7 @@ async function check_in_game(data) {
   let index = games.findIndex(game=> game.id == data.game.id)
   return index!=-1 ? games[index] : null;
 }
+module.exports.check_in_game = check_in_game
 
 async function check_game_created(data)
 {

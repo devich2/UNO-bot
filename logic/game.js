@@ -41,12 +41,13 @@ class Game {
     }
 
     now_player() {
+        if(!this.started) throw new Error('Game not started')
         return this.players[this.now]
     }
 
     prev_player(){
         if(!this.started) throw new Error('Game not started')
-        if(this.players.length <=1) throw new Error('One player in game(needs deleting)')
+        // if(this.players.length <=1) throw new Error('One player in game(needs deleting)')
         let prev;
         let turn = this.now - this.turn
         if (turn < 0) {
@@ -257,15 +258,11 @@ class Game {
     }
     set_color(color) {
 
-        try{
+        
             this.last_card.set_color(color);
-            console.log("COLORS", color, this.last_card.color);
-            return Object.assign(this.end_turn() , this.check_can_call_bluff() ? { can_call_bluff: true }: {});
-        }
-        catch(e)
-        {
-            console.log(e || e.message)
-        }
+            //console.log("COLORS", color, this.last_card.color);
+            return Object.assign(this.end_turn() , this.check_can_call_bluff() ? { can_call_bluff: true, challenged: this.prev_player() }: {});
+        
        
     }
     

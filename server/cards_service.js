@@ -112,8 +112,8 @@ async function put_card(data, conn) {
     let game = {};
     try {
         const player_id = data.player.id;
-        const game_content = await storage.load_by_id(player_id);
-        game = new Game(game_content[0]);
+        let game_content = await storage.load_game(data.game.id);
+        game = new Game(game_content);
         if (game.now_player().id != player_id) throw new Error('NOT_YOU');
         let res = game.put_card(data.card.id);
         storage.save_game(game);
@@ -129,9 +129,11 @@ async function put_card(data, conn) {
         }
         else 
         {
-            let type = res.change_color ? 'CHANGE_COLOR' : res.can_call_bluff ? 'CAN_CALL_BLUFF' : 'PUT_CARD'
-            let multicast = type == 'PUT_CARD'
-            broadcast.send(send_game(type, data, game, res), multicast ? game.players : null, multicast ? null : conn)
+            broadcast.send(send_game('PUT_CARD', data, game, res), game.players)
+            if(res.change_color)
+            {
+                conn.sendUTF(JSON.stringify(send_game('CHANGE_COLOR', data, game, res)))
+            }
         }
     } catch (e) {
        conn.sendUTF(JSON.stringify(send_game(e.message || e, data, game)));
@@ -148,6 +150,10 @@ async function set_color(data,conn) {
         let res = game.set_color(data.color);
         storage.save_game(game);
         broadcast.send(send_game('PUT_CARD', data, game,res), game.players);
+        if(res.can_call_bluff)
+        {
+            conn.sendUTF(JSON.stringify(send_game('CAN_CALL_BLUFF', data, game, res)))
+        }
     } catch (e) {
         conn.sendUTF(JSON.stringify(send_game(e.message || e, data, {
             id: data.game.id
@@ -178,7 +184,3 @@ const send_game = (type, data, game, args = {}) => Object.assign(data, {
   })
 
   
-async function check_in_game(data) {
-    let games = await storage.load_by_id(data.game.player.id);
-    return games.length != 0;
-}

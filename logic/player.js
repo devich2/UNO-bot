@@ -7,7 +7,8 @@ const find_card = (id) => {
     }
   }
 class Player {
-    constructor(dict) {
+    constructor(dict) { 
+        if(!dict.id || !dict.username) throw new Error('Player username and telegram id neccessary.')
         this.id = dict.id
         this.username = dict.username ? dict.username : '';
         this.full_name = dict.full_name ? dict.full_name : dict.first_name + (dict.last_name ? ' ' + dict.last_name : '')

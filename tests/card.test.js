@@ -1,16 +1,9 @@
-const Card = require("../logic/card")
-const Game = require("../logic/game")
-const Player = require("../logic/player")
-const card_deck = require("../logic/uno_cards");
+const create_card = require('./help-data/card')
 const Values = require("./help-data/values")
 const Types = require("./help-data/types")
 const Colors = require("./help-data/colors")
+const Card = require("../logic/card")
 
-const create_card = (content, type, color) => {
-    for (let card of card_deck) {
-      if (card.content == content && card.type == type) return new Card(Object.assign({}, card, color? {color: color} : {}))
-    }
-  }
 
 describe('Card', ()=>
 {
@@ -29,7 +22,7 @@ describe('Card', ()=>
     
         it('should error if color is invalid', () => {
           expect(() => create_card(Values.WILD, Types.WILD, 'orange')).toThrow('Invalid color.');
-          expect(() => create_card(Values.ZERO, 'orange')).toThrow('Invalid color.');
+          expect(() => new Card({content: Values.EIGHT, type: 'orange'})).toThrow('Invalid color.');
         });
 })
 
@@ -54,7 +47,7 @@ describe('#color', function() {
     expect(wild.type).toBe('choose');
 
     const wild_draw_four = create_card(Values.WILD_DRAW_FOUR, Types.WILD_DRAW_FOUR, Colors.RED);
-    expect(wild_draw_four.color).ToBe('r');
+    expect(wild_draw_four.color).toBe('r');
     expect(wild_draw_four.type).toBe('draw');
   });
 
@@ -103,6 +96,43 @@ describe('#score', function() {
   });
 });
 
+describe('#isWildCard()', function() {
+  it('should return true if card is a WILD_DRAW_FOUR or WILD', () => {
+    const wild = create_card(Values.WILD, Types.WILD);
+    const wd4 = create_card(Values.WILD_DRAW_FOUR, Types.WILD_DRAW_FOUR);
+
+    expect(wild.is_wild_card()).toBe(true);
+    expect(wd4.is_wild_card()).toBe(true);
+  });
+
+  it('should return false if card is any normal or other special card', () => {
+    const zero = create_card(Values.ZERO, Types.YELLOW)
+    const reverse = create_card(Values.REVERSE, Types.YELLOW);
+
+    expect(zero.is_wild_card()).toBe(false);
+    expect(reverse.is_wild_card()).toBe(false);
+  });
+});
 
 
+describe('#isSpecialCard()', function() {
+  it('should return true if card is one of WILD_DRAW_FOUR, WILD, DRAW_TWO, REVERSE or SKIP', () => {
+    const wild = create_card(Values.WILD, Types.WILD);
+    const wd4 = create_card(Values.WILD_DRAW_FOUR, Types.WILD_DRAW_FOUR);
+    const skip = create_card(Values.SKIP, Types.RED);
+    const reverse = create_card(Values.REVERSE, Types.RED)
+    const dt = create_card(Values.DRAW_TWO, Types.RED);
+
+    expect(wild.is_special_card()).toBe(true);
+    expect(wd4.is_special_card()).toBe(true);
+    expect(skip.is_special_card()).toBe(true);
+    expect(reverse.is_special_card()).toBe(true);
+    expect(dt.is_special_card()).toBe(true);
+  });
+
+  it('should return false if card is any normal card', () => {
+    const zero = create_card(Values.ZERO, Types.RED);
+    expect(zero.is_special_card()).toBe(false);
+  });
+});
 })

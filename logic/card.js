@@ -7,7 +7,6 @@ class Card {
           if (this.color && !this.is_valid_color(this.color)) throw new Error('Invalid color.'); 
         }
         else if(!this.is_valid_color(this.type)) throw new Error('Invalid color.'); 
-        
     }
 
     toString() {
@@ -57,7 +56,7 @@ class Card {
           case 'four':
             return 50;
           default:
-            return this.content;
+            return parseInt(this.content, 10);
         }
       }
     
