@@ -304,4 +304,4 @@ class Game {
         return this.now_player().cards.length == 0;
     }
 }
-module.exports.Game = Game;
+module.exports = Game;

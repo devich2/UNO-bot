@@ -1,4 +1,4 @@
-const logic = require("../logic/game");
+const Game = require("../logic/game");
 const storage = require("../logic/db");
 const broadcast = require("./websocket_service")
 
@@ -13,7 +13,7 @@ async function create_game(data, conn) {
       })))
     } else {
       console.log('Created game')
-        game = new logic.Game({
+        game = new Game({
         id: data.game.id,
         creator: data.game.player.username,
         players: [data.game.player]
@@ -64,13 +64,13 @@ async function add_player(data, conn) {
     let in_game = await check_in_game(data), content, game;
     if (in_game) {
       console.log('IN GAME',in_game)
-      game = new logic.Game(in_game)
+      game = new Game(in_game)
       //console.log(game);
       conn.sendUTF(JSON.stringify(send_game('ALREADY_IN_GAME',data, game)));
       send_hanging_actions(game, data, conn)
     } else {
       content = await storage.load_game(data.game.id);
-      game = new logic.Game(content);
+      game = new Game(content);
       game.add_player(data.game.player);
       storage.save_game(game); 
       broadcast.send(send_game("PLAYER_JOINED", data, game), game.players);
@@ -89,7 +89,7 @@ async function delete_player(data, conn) {
   try {
     console.log('Here',data.game.id);
     let content = await storage.load_game(data.game.id);
-    let game = new logic.Game(content);
+    let game = new Game(content);
     console.log('GAMESD',game, game.now)
     let unset_color = (game.now_player().username == data.game.player.username) && (game.check_can_change_color())
     let deleted_player = game.remove_player(data.game.player);
@@ -128,7 +128,7 @@ module.exports.delete_player = delete_player;
 async function start_game(data, conn) {
   try {
     let content = await storage.load_game(data.game.id);
-    let game = new logic.Game(content);
+    let game = new Game(content);
     console.log('Game before starting ', game.repr())
     game.start();
     console.log('Game after starting', game.repr())
@@ -206,7 +206,7 @@ module.exports.delete_game = delete_game;
 async function get_game(data, conn) {
   try{
     let game_content = await storage.load_game(data.game.id);
-    let game = new logic.Game(game_content);
+    let game = new Game(game_content);
     conn.sendUTF(JSON.stringify(send_game('GAME', data, game)))
   }
   catch (e) {

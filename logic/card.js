@@ -1,21 +1,28 @@
 class Card {
     constructor(dict) {
-    
+      
         Object.assign(this, {}, dict)
-        if (!this.is_wild_card() && this.color != undefined) {
-            throw Error('Only wild cards can be initialized with no color');
-          }
+        if(this.is_wild_card())
+        {
+          if (this.color && !this.is_valid_color(this.color)) throw new Error('Invalid color.'); 
+        }
+        else if(!this.is_valid_color(this.type)) throw new Error('Invalid color.'); 
+        
     }
 
     toString() {
         return JSON.stringify(this.repr())
     }
     
-    
+    is_valid_color(color)
+    {
+      return color == 'r' || color =='b' || color =='g' || color =='y'
+    }
+
       set_color(color) {
         if (!this.is_wild_card())
           throw new Error('Only wild cards can have theirs colors changed.');
-        else if (color != 'r' && color !='b' && color !='g' && color !='y')
+        else if (!this.is_valid_color(color))
           throw new Error('Invalid color.');
     
         this.color = color;

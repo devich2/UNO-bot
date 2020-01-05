@@ -1,4 +1,4 @@
-const logic = require("../logic/game");
+const Game = require("../logic/game");
 const storage = require("../logic/db");
 const broadcast = require("./websocket_service")
 
@@ -13,7 +13,7 @@ async function get_cards(data, conn) {
             cards = [];
         else {
             console.log('Game content for getting cards:', game_content);;
-            game = new logic.Game(game_content[0] || {});
+            game = new Game(game_content[0] || {});
             const index = game.players.findIndex(player => player.id == player_id);
             if (index == -1) throw new Error('PLAYER_NOT_FOUND')
             const now_player = game.now_player()
@@ -67,7 +67,7 @@ module.exports.get_cards = get_cards;
 async function call_bluff(data) {
     try {
         let game_content = await storage.load_game(data.game.id);
-        let game = new logic.Game(game_content);
+        let game = new Game(game_content);
         if (game.now_player().id != data.game.player.id) throw new Error('NOT_YOU');
         let res = game.check_honest(data.challenge);
         storage.save_game(game);
@@ -88,7 +88,7 @@ async function pass(data, skip, conn) {
         console.log(data.game.id);
         let game_content = await storage.load_game(data.game.id);
         console.log('GAME_CONTENT', game_content)
-        let game = new logic.Game(game_content);
+        let game = new Game(game_content);
         if (game.now_player().id != data.game.player.id) throw new Error('NOT_YOU');
         if(game.last_card.content == 'draw')
         {
@@ -113,7 +113,7 @@ async function put_card(data, conn) {
     try {
         const player_id = data.player.id;
         const game_content = await storage.load_by_id(player_id);
-        game = new logic.Game(game_content[0]);
+        game = new Game(game_content[0]);
         if (game.now_player().id != player_id) throw new Error('NOT_YOU');
         let res = game.put_card(data.card.id);
         storage.save_game(game);
@@ -143,7 +143,7 @@ module.exports.put_card = put_card;
 async function set_color(data,conn) {
     try {
         let game_content = await storage.load_game(data.game.id);
-        let game = new logic.Game(game_content);
+        let game = new Game(game_content);
         if (data.game.player.id != game.now_player().id) throw new Error('NOT_YOU');
         let res = game.set_color(data.color);
         storage.save_game(game);
