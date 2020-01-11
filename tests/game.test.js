@@ -5,7 +5,7 @@ const Colors = require("./help-data/colors")
 const Card = require("../logic/card")
 const Game = require("../logic/game")
 const Player = require("../logic/player")
-const test_data = require("./test-data")
+const test_data = require("./help-data/test-data")
 const create_card = require("./help-data/card-helper").create_card
 
 describe('#Game', () => {

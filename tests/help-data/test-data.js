@@ -1,10 +1,10 @@
-const card_helper = require("./help-data/card-helper")
+const card_helper = require("./card-helper")
 const get_cards = card_helper.get_cards
 const create_card = card_helper.create_card
 const create_players = card_helper.create_players
-const Values = require("./help-data/values")
-const Types = require("./help-data/types")
-const Colors = require("./help-data/colors")
+const Values = require("./values")
+const Types = require("./types")
+const Colors = require("./colors")
 
 const test_data = {
 
