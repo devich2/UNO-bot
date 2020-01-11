@@ -251,11 +251,13 @@ class Game {
     }
     check_can_call_bluff()
     {
+        if(!this.last_card) return false;
         return this.last_card.color && this.last_card.content == 'four';
     }
     check_can_change_color()
     {
-        return this.last_card.is_wild_card() && !this.last_card.color;
+        if(!this.last_card) return false;
+        return  this.last_card.is_wild_card() && !this.last_card.color;
     }
     set_color(color) {
  
