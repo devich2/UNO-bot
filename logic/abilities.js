@@ -31,7 +31,10 @@ const abilities = {
    },
    'draw': () => {
       return (game) => {
+         console.log('DRAW',game.now_player().cards.length )
          game.private_draw(game.now_player(), 2);
+         console.log('DRAW',game.now_player().cards.length )
+
          //game.next();
          return null;
       }

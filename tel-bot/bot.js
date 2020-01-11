@@ -156,6 +156,7 @@ bot.on('chosen_inline_result', (ctx) => {
     if (ctx.chosenInlineResult.result_id.length > 5) {
         send({
             type: 'PUT_CARD',
+        
             player: ctx.from,
             card: {
                 id: ctx.chosenInlineResult.result_id.match(/[0-9]+\|(.+)/)[1]

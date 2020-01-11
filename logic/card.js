@@ -2,11 +2,15 @@ class Card {
     constructor(dict) {
       
         Object.assign(this, {}, dict)
+       
         if(this.is_wild_card())
         {
           if (this.color && !this.is_valid_color(this.color)) throw new Error('Invalid color.'); 
         }
-        else if(!this.is_valid_color(this.type)) throw new Error('Invalid color.'); 
+        else if(this.is_valid_color(this.type) == false) 
+        {console.log(this.type, 'HERE') 
+        throw new Error('Invalid color.'); 
+      }
     }
 
     toString() {

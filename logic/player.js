@@ -28,7 +28,7 @@ class Player {
       }
 
     remove_card(card) {
-        if (!this.has_card(card)) return;
+        if (!this.has_card(card)) throw new Error(`Player doesnt have ${card.content} ${card.type} on hand`);
         const index = this.cards.findIndex(c => c.content == card.content && c.type == card.type);
         return this.cards.splice(index, 1)[0];
     }

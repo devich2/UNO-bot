@@ -1,4 +1,4 @@
-const create_card = require('./help-data/card')
+const create_card = require('./help-data/card-helper').create_card
 const Values = require("./help-data/values")
 const Types = require("./help-data/types")
 const Colors = require("./help-data/colors")

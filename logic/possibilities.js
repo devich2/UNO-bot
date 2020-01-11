@@ -6,7 +6,7 @@ const possibilities = {
     },
     'reverse': (card, change)=>
     {
-       return [{'content': 'reverse'}, {'type': card.type}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
+       return [{'content': 'reverse'}, {'type': card.type},{'content': 'four'}, {'content': 'color'}];
     },
     'draw': (card, change)=>
     {
@@ -14,11 +14,11 @@ const possibilities = {
     },
     'skip': (card, change)=>
     {
-       return [{'content': card.content}, {'type': card.type}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
+       return [{'content': card.content}, {'type': card.type},{'content': 'four'}, {'content': 'color'}];
     },
     'color': (card, change)=>
     {
-        return [{'type': card.color}].concat(change ? [{'content': 'four'}, {'content': 'color'}] : []);
+        return [{'type': card.color},{'content': 'four'}, {'content': 'color'}];
     },
     'simple': (card)=>
     {

@@ -24,6 +24,7 @@ const shuffle = (array)=> {
 
 class Game {
     constructor(dict) {
+        if(!dict.id || !dict.creator) throw new Error('Id and username of creator are necessary.')
         this.id = dict.id
         this.now = dict.now || 0
         this.creator = dict.creator
@@ -34,7 +35,6 @@ class Game {
         this.possible_cards = dict.possible_cards ? dict.possible_cards.map(card => find_card(card.id)) : [];
         this.players = dict.players ? dict.players.map(pl => new Player(pl)) : [];
         this.turn = dict.turn || 1 // 1 | -1
-        this.winner = dict.winner ? dict.winner : 0; //1 | 0
         this.ability = abilities[dict.ability] ? abilities[dict.ability]() : null;
         this.started = dict.started ? dict.started : false;
         this.drawn = dict.drawn ? dict.drawn : false;
@@ -72,7 +72,6 @@ class Game {
             players: this.players.map(player => player.repr()),
             turn: this.turn,
             ability: this.ability ? this.last_card.content : 0,
-            winner: this.winner,
             started: this.started,
             drawn: this.drawn
          
@@ -103,6 +102,7 @@ class Game {
         return this.players.splice(index, 1)[0];
     }
     next(turns = 1) {
+        if(!this.started) throw new Error('GAME_NOT_STARTED')
         const turn = this.now + turns * this.turn
         if (turn < 0) {
             this.now = this.players.length + turn
@@ -123,12 +123,12 @@ class Game {
         let some_cards = [];
         if (this.cards.length < count) {
             this.reload_cards();
-        } else if (this.cards.length > count) {
+        } 
             for (let i = 0; i < count; i++) {
                 some_cards.push(this.cards.splice(getRandomInt(0, this.cards.length - 1), 1)[0])
             }
             return some_cards;
-        }
+    
     }
 
     private_draw(player, amount)
@@ -243,27 +243,26 @@ class Game {
     
     
     check_honest(check) {
-        let result = {}; 
+        let result = {};
+        if(!this.check_can_call_bluff()) throw new Error('Cant challenge previous player.')
         this.ability = this.ability(this,check,result);
-        this.end_turn(!result.bluffed,true);
+        this.end_turn(result.bluffed ? false : true, true);
         return result;
     }
     check_can_call_bluff()
     {
-        return this.last_card.content == 'four' && this.last_card.color;
+        return this.last_card.color && this.last_card.content == 'four';
     }
     check_can_change_color()
     {
         return this.last_card.is_wild_card() && !this.last_card.color;
     }
     set_color(color) {
-
-        
+ 
             this.last_card.set_color(color);
             //console.log("COLORS", color, this.last_card.color);
-            return Object.assign(this.end_turn() , this.check_can_call_bluff() ? { can_call_bluff: true, challenged: this.prev_player() }: {});
-        
-       
+            const can_bluff = this.check_can_call_bluff();
+            return Object.assign(this.end_turn(), can_bluff ? { can_call_bluff: true, challenged: this.prev_player() }: {});    
     }
     
     end_turn(next_step = true, change_possible = false)
@@ -271,9 +270,9 @@ class Game {
         console.log(this.last_card);
         if (this.check_can_change_color()) {
             console.log('Not added possible');
-            return Object.assign({
+            return {
                 change_color: true
-            });
+            };
         }
         console.log('Here', next_step);
         let res = Object.assign(this.check_winner(),{over : this.is_over()});
